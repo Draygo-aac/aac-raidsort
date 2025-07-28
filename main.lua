@@ -1,5 +1,26 @@
 local api = require("api")
 local CreateTooltip = nil
+
+CLASS_BATTLERAGE = 1
+CLASS_WITCHCRAFT = 2
+CLASS_DEFENSE = 3
+CLASS_AURAMANCY = 4
+CLASS_OCCULTISM = 5
+CLASS_ARCHER = 6
+CLASS_MAGE = 7
+CLASS_SHADOWPLAY = 8
+CLASS_SONGCRAFT = 9
+CLASS_HEALER = 10
+
+STAT_MELEE = 8
+STAT_RANGED = 9
+STAT_MAGIC = 10
+STAT_HEALING = 11
+STAT_MELEEHP = 12
+STAT_RANGEDHP = 13
+STAT_MAGICHP = 14
+
+	
 -- First up is the addon definition!
 -- This information is shown in the Addon Manager.
 -- You also specify "unload" which is the function called when unloading your addon.
@@ -7,7 +28,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "0.1"
+  version = "0.2"
 }
 local raidmanager
 
@@ -58,74 +79,126 @@ for i = 1,50 do
     table.insert(raidtable, false)
 end
 
-TYPEODE = 1
-TYPETANK = 2
-TYPEMAGE = 3
-TYPEMELEE = 4
-TYPERANGED = 5
-TYPEHEALER = 6
-odepos = {21,22,23,24}
-healerpos = {5,10,15,20,25,30,35,40,45,46,47,48,49,50}
-tankpos = {1,2,3,4,6,11,16,7,8,9}
-elsepos = {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}
+local function CreateFilter(name, max, classtable, stattable, postable, continueflag, playertable)
+    local data = {}
+    data.name = name
+    data.max = max
+    data.isplayertable = playertable ~= nil
+    data.classtable = classtable
+    data.stat = stattable
+    data.playertable = playertable
+    data.posarray = postable
+    data.continueflag = continueflag
+    return data
+end
+DEFAULT_ODE_MAX = 4
+DEFAULT_MAX = 50
+local savedata, settings
 
-odestart = 1
-tankstart = 1
-healerstart = 1
-elsestart = 1
+function GetDefaults()
+    local filters = {}
+    filters[1] = CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
+    filters[2] = CreateFilter("Ode", DEFAULT_ODE_MAX, {CLASS_HEALER, CLASS_SONGCRAFT}, {STAT_HEALING}, {21,22,23,24}, true)
+    filters[3] = CreateFilter("Tank", DEFAULT_MAX, {CLASS_OCCULTISM}, {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}, {1,2,3,4,6,11,16,7,8,9}, false)
+    filters[4] = CreateFilter("Mage", DEFAULT_MAX, {CLASS_MAGE}, {STAT_MAGIC}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
+    filters[5] = CreateFilter("Melee", DEFAULT_MAX, {CLASS_BATTLERAGE}, {STAT_MELEE}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
+    filters[6] = CreateFilter("Ranged", DEFAULT_MAX, {CLASS_ARCHER}, {STAT_RANGED}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
+    filters[7] = CreateFilter("Healer", DEFAULT_MAX, {CLASS_HEALER}, {STAT_HEALING}, {5,10,15,20,25,30,35,40,45,46,47,48,49,50}, false)
+
+    return filters
+end
+
+function GetDefaultSettings()
+    local settingfile = {}
+    settingfile["autoquery"] = true
+    settingfile["autosort"] = false
+    return settingfile
+end
+
+SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
+_SETTINGSFILE = "raidsort\\data\\settings.lua"
+
+function LoadFilters()
+	return api.File:Read(SAVEFILEFILTERS)
+end
+function LoadSettings()
+    return api.File:Read(_SETTINGSFILE)
+end
+
+function LoadData()
+    local loaded, data = pcall(LoadFilters)
+    if loaded and data ~= nil then 
+        savedata = data
+    else
+        savedata = GetDefaults()
+    end
+    local loadsettings, settingdata = pcall(LoadSettings)
+    if loadsettings and settingdata ~= nil then
+        settings = settingdata
+    else
+        settings = GetDefaultSettings()
+    end
+end
+
+function SaveData(filtersettings, globalsettings)
+	api.File:Write(SAVEFILEFILTERS, filtersettings)
+    api.File:Write(_SETTINGSFILE, globalsettings)
+end
+
+
+local function IsNameMatch(filterobject, name)
+    for i = 1, #filterobject.playertable do
+        if name == filterobject.playertable[i] then
+            return true, filterobject.max - i
+        end
+    end
+    return false, 0
+end
+
+local function IsClassMatch(filterobject, classes)
+    local matchcount = 0
+    for k,v in pairs(classes) do
+        for i = 1, #filterobject.classtable do
+            if v == filterobject.classtable[i] then
+                matchcount = matchcount + 1
+            end
+        end
+    end
+    return matchcount == #filterobject.classtable
+end
+
+local function GetStatValue(filterobject, data)
+    local retval = 0
+    for i = 1, #filterobject.stat do
+        retval = retval + data[filterobject.stat[i]]
+    end
+    return retval
+end
+
+posstartarray = {}
 
 local function ResetRaidTable()
     for i = 1, 50 do
         raidtable[i] = false
     end
-    odestart = 1
-    tankstart = 1
-    healerstart = 1
-    elsestart = 1
+    for i = 1, #savedata do
+        posstartarray[i] = 1
+    end
 end
 
-local function GetNext(Type)
-    if Type == TYPEODE then
-        for i = odestart, #odepos do
-            if raidtable[odepos[i]] == false then
-                raidtable[odepos[i]] = true
-                odestart = i + 1
-                return odepos[i]
-            end
-        end
-    elseif Type == TYPETANK then
-        for i = tankstart, #tankpos do
-            if raidtable[tankpos[i]] == false then
-                raidtable[tankpos[i]] = true
-                tankstart = i + 1
-                return tankpos[i]
-            end
-        end
-    elseif Type == TYPEHEALER then
-        for i = healerstart, #healerpos do
-            if raidtable[healerpos[i]] == false then
-                raidtable[healerpos[i]] = true
-                healerstart = i + 1
-                return healerpos[i]
-            end
-        end
-    else 
-        for i = elsestart, #elsepos do
-            if raidtable[elsepos[i]] == false then
-                raidtable[elsepos[i]] = true
-                elsestart = i + 1
-                return elsepos[i]
-            end
-        end
-    end
-    for i = 1, 50 do
-        if raidtable[i] == false then
-            raidtable[i] = true
-            return i
+local function FilterGetNext(filterobject, index)
+    --api.Log:Info("FilterGetNext " .. posstartarray[index] .. " " .. #filterobject.posarray)
+    for i = posstartarray[index], #filterobject.posarray do
+        local idx = filterobject.posarray[i]
+        --api.Log:Info(idx)
+        if raidtable[idx] == false then
+            raidtable[idx] = true
+            return idx
         end
     end
     return 0
 end
+
 local function GetUnitInfo(uid)
     return api.Unit:GetUnitInfoById(uid)
 end
@@ -138,8 +211,8 @@ local function GetOrGetCache(unitid, uid, name)
     if(uid == nil) then
         return false, nil, nil
     end
+
     local gotdata, data = pcall(api._Addons.AdvStats.GetData, unitid)
-    
 
     if gotdata == false then
         if cachedData[name] ~= nil then
@@ -149,6 +222,7 @@ local function GetOrGetCache(unitid, uid, name)
     else
         cachedData[name] = data
     end
+
     local gotunitinfo, info = pcall(GetUnitInfo, uid)
     
     if gotunitinfo == false then
@@ -159,6 +233,7 @@ local function GetOrGetCache(unitid, uid, name)
         end
     else 
         cachedInfo[name] = info
+
     end
     
     return gotdata and gotunitinfo, data, info
@@ -190,201 +265,79 @@ end
 
 local function SortRaid()
     ResetRaidTable()
-    
-    odel = {}
-    healers = {}
-    mdps = {}
-    rdps = {}
-    mages = {}
-    tanks = {}
-
-    for i = 1,50 do
-  
+    local sortdata = {}
+    for i = 1, #savedata do
+        sortdata[i] = {}
+    end
+    for i = 1, 50 do
         local unitid, uid = GetUnit(i)
         local name = GetName(i)
         local success, data, info = GetOrGetCache(unitid, uid, name)
-        
         if uid ~= nil and success then
-            
-            --local data = msg
-            --local data = api._Addons.AdvStats.GetData(unitid)
-            --local info = GetUnitInfo(uid)
-            --api.Log:Info(name)
-            local battle = false
-            local occult = false
-            local mage = false
-            local ranged = false
-            local healer = false
-            local ode = false
-            local song = false
-            --api.Log:Info(info.class)
-            for k,v in pairs(info.class) do
-                --api.Log:Info(v)
-                if v == 4 then
-                    --aura
-                elseif v == 10 then
-                    healer = true
-                elseif v == 9 then
-                    song = true
-                elseif v == 8 then
-                    --shadowplay
-                elseif v == 1 then
-                    battle = true
-                elseif v == 2 then
-                    --witchcraft
-                elseif v == 5 then
-                    occult = true
-                elseif v == 3 then
-                    --defense
-                elseif v == 6 then
-                    ranged = true
-                elseif v == 7 then
-                    mage = true
+            for ii = 1, #savedata do
+                local add = false
+                local stat = 0
+                if savedata[ii].isplayertable then
+                    local isMatch
+                    isMatch, stat = IsNameMatch(savedata[ii], name)
+                    if (isMatch  == true) then
+                        add = true
+                    end
                 else
-                    --api.Log:Info(v)
+                    if IsClassMatch(savedata[ii], info.class) then
+                        add = true
+                        stat = GetStatValue(savedata[ii], data)
+                    end
+                end
+                if add then
+                    local tdata = {["id"]=name, ["value"] = stat}
+                    table.insert(sortdata[ii], tdata)
+                    if (savedata[ii].continueflag == false) then
+                        break
+                    end
                 end
             end
-            if healer and song then
-                ode = true
-            end
-            if battle then 
-               healer = false
-               ode = false
-               occult = false
-               mage = false
-               ranged = false
-               --api.Log:Info(data[8])
-               local tdata = {["id"]=name, ["value"] = data[8]}
-               table.insert(mdps, tdata)
-            end
-
-            if occult then 
-               healer = false
-               ode = false
-               mage = false
-               ranged = false
-               local defense = data[12] + data[13] + data[14] + data[14]
-               local tdata = {["id"]=name, ["value"] = defense}
-               table.insert(tanks, tdata)
-            end
-
-            if mage then 
-               healer = false
-               ode = false
-               ranged = false
-               --api.Log:Info(data[10])
-               local tdata = {["id"]=name, ["value"] = data[10]}
-               table.insert(mages, tdata)
-            end
-
-            if ranged then 
-               healer = false
-               ode = false
-               --api.Log:Info(data[8])
-               local tdata = {["id"]=name, ["value"] = data[9]}
-               table.insert(rdps, tdata)
-            end
-
-
-            if healer then 
-               local tdata = {["id"]=name, ["value"] = data[11]}
-               table.insert(healers, tdata)
-            end
-            if ode then
-               local tdata = {["id"]=name, ["value"] = data[11]}
-               table.insert(odel, tdata)
-            end           
         end
-        
-        
     end
-
-    table.sort(odel, sortvalue)
-    --api.Log:Info("#healers b " .. #healers)
-    local k = #odel
-    if k > 4 then
-        k = 4
+    
+    for i = 1, #savedata do
+        local playerlist = sortdata[i]
+        local filterobject = savedata[i]
+        table.sort(playerlist, sortvalue)
+        for ii = 1, #playerlist do
+            unit = playerlist[ii]
+            pos = FilterGetNext(filterobject, i)
+            if filterobject.continueflag == true then
+                for iii = i + 1, #savedata do
+                    RemoveFromTable(sortdata[iii], unit.id)
+                end
+            end
+            local idx = GetMemberIndexByName(unit.id)
+            if pos ~= 0 then
+                Swap(idx, pos)
+            end
+        end
     end
-
-    for i = 1, k do
-        unit = odel[i]
-        pos = GetNext(TYPEODE)
-        RemoveFromTable(healers, unit.id)
-        local idx = GetMemberIndexByName(unit.id)
-        Swap(idx, pos)
-    end
-    --api.Log:Info("#healers a " .. #healers)
-    --api.Log:Info("#tanks a " .. #tanks)
-    --api.Log:Info("#mages a " .. #mages)
-    --api.Log:Info("#mdps a " .. #mdps)
-    --api.Log:Info("#rdps a " .. #rdps)
-
-    --put tanks and mages in First
-    table.sort(tanks, sortvalue)
-    for i = 1, #tanks do
-        pos = GetNext(TYPETANK)
-        unit = tanks[i]
-        local idx = GetMemberIndexByName(unit.id)
-        Swap(idx, pos)
-    end
-
-    table.sort(mages, sortvalue)
-    for i = 1, #mages do
-        pos = GetNext(TYPEMAGE)
-        unit = mages[i]
-        local idx = GetMemberIndexByName(unit.id)
-        --api.Log:Info(unit.id)
-        --api.Log:Info(idx .. " " .. pos)
-        Swap(idx, pos)
-    end
-
-    table.sort(mdps, sortvalue)
-    for i = 1, #mdps do
-        pos = GetNext(TYPEMELEE)
-        unit = mdps[i]
-        local idx = GetMemberIndexByName(unit.id)
-
-        Swap(idx, pos)
-    end
-
-    table.sort(rdps, sortvalue)
-    for i = 1, #rdps do
-        pos = GetNext(TYPERANGED)
-        unit = rdps[i]
-        local idx = GetMemberIndexByName(unit.id)
-        Swap(idx, pos)
-    end
-
-    table.sort(healers, sortvalue)
-    for i = 1, #healers do
-        
-        pos = GetNext(TYPEHEALER)
-        unit = healers[i]
-        --api.Log:Info(unit.id)
-        local idx = GetMemberIndexByName(unit.id)
-        --api.Log:Info(idx .. " " .. pos)
-        Swap(idx, pos)
-    end
-
 end
-local function Testing()
-    api.Log:Info("UnitInfo")
-    local unit = "team1"
-    --api.Log:Info(api.Unit:UnitInfo("team1")) -- doesnt work when out of range
-    api.Log:Info(api.Team:GetMemberIndexByName("Evergreen")) --works when out of ranged
-    api.Log:Info(tostring(api.Unit:UnitIsTeamMember(unit))) -- works when out of range
-    local id = api.Unit:GetUnitId(unit) -- works out of range...
-    api.Log:Info(tostring(id))
-    --local name = api.Unit:GetUnitScreenNameTagOffset(unit) -- does not work out of range
-    --api.Log:Info(tostring(name))
-    local text = raidmanager.party[1].member[1].nameLabel:GetText() -- we can get name this way
-    api.Log:Info(text)
+local SettingsWindow
+
+
+
+function OnCloseSettings(filters, newsettings)
+    savedata = filters
+    settings = newsettings
+    SaveData(savedata, settings)
 end
-
-
+function OpenSettings()
+     SettingsWindow:Open(savedata, settings, OnCloseSettings)
+end
 -- The Load Function is called as soon as the game loads its UI. Use it to initialize anything you need!
 local function Load() 
+    SettingsWindow = require("raidsort\\settingswindow")
     CreateTooltip = api._Library.UI.CreateTooltip
+    LoadData()
+    SaveData(savedata, settings)
+
     raidmanager = ADDON:GetContent(UIC.RAID_MANAGER )
 
     if raidmanager.sortBtn ~= nil then
@@ -408,23 +361,20 @@ end
 -- Unload is called when addons are reloaded.
 -- Here you want to destroy your windows and do other tasks you find useful.
 local function Unload()
-    if raidmanager.testbtn2 ~= nil then
-        raidmanager.testbtn2:Show(false)
-        raidmanager.testbtn2 = nil
-    end
+
     if raidmanager.sortBtn ~= nil then
         raidmanager.sortBtn:Show(false)
         raidmanager.sortBtn = nil
     end
-    if raidmanager.testbtn1 ~= nil then
-        raidmanager.testbtn1:Show(false)
-        raidmanager.testbtn1 = nil
+    if SettingsWindow ~= nil then
+        SettingsWindow:Show(false)
+        SettingsWindow = nil
     end
 end
---api.On("ShowPopUp", OnRightClickMenu)
+
 -- Here we make sure to bind the functions we defined to our addon. This is how the game knows what function to use!
 raid_mgr_addon.OnLoad = Load
 raid_mgr_addon.OnUnload = Unload
-
+raid_mgr_addon.OnSettingToggle = OpenSettings
 
 return raid_mgr_addon
