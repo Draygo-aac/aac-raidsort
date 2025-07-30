@@ -40,7 +40,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0"
+  version = "1.0.1"
 }
 local raidmanager
 
@@ -230,7 +230,7 @@ local function GetOrGetCache(unitid, uid, name)
 
     if gotdata == false then
         if cachedData[name] ~= nil then
-            info = cachedData[name]
+            data = cachedData[name]
             gotdata = true
         end        
     else
@@ -239,7 +239,7 @@ local function GetOrGetCache(unitid, uid, name)
 
     local gotunitinfo, info = pcall(GetUnitInfo, uid)
     
-    if gotunitinfo == false then
+    if gotunitinfo == false or info == nil then
     
         if cachedInfo[name] ~= nil then
             info = cachedInfo[name]
@@ -351,13 +351,16 @@ local counter = 0
 local teammember = 0
 local sortcounter = 0
 
-local function OnUpdate(dt)
+
+local function DoUpdate(dt)
+    if updaterunning then
+        return
+    end
+    updaterunning = true
     counter = counter + 1
     if counter >= 60 then
         counter = 0
-        --api.Log:Info(api.Team)
-        --local myid, myuid = GetUnit("Player")
-        --myid = "Player"
+
         if api.Team:IsPartyTeam() then
             return
         end
@@ -384,14 +387,24 @@ local function OnUpdate(dt)
 
         if settings.autosort and isleader then
             sortcounter = sortcounter + 1
-            if sortcounter == 3 then
+            if sortcounter >= 3 then
                 SortRaid()
                 sortcounter = 0
             end
         end
 
     end
+    updaterunning = false
+end
 
+local function OnUpdate(dt)
+    
+    local success, err = pcall(DoUpdate, dt)
+    if success == false then
+        api.Log:Err(err)
+
+    end
+    
 end
 -- The Load Function is called as soon as the game loads its UI. Use it to initialize anything you need!
 local function Load() 
