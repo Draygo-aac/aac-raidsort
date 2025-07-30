@@ -20,7 +20,19 @@ STAT_MELEEHP = 12
 STAT_RANGEDHP = 13
 STAT_MAGICHP = 14
 
-	
+SORT_MELEE = 1
+SORT_RANGED = 2
+SORT_MAGIC = 3
+SORT_HEALING = 4
+SORT_DEFENSE = 5
+
+STAT_ARRAY = {}
+STAT_ARRAY[SORT_MELEE] = {STAT_MELEE}
+STAT_ARRAY[SORT_RANGED] = {STAT_RANGED}
+STAT_ARRAY[SORT_MAGIC] = {STAT_MAGIC}
+STAT_ARRAY[SORT_HEALING] = {STAT_HEALING}
+STAT_ARRAY[SORT_DEFENSE] = {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}
+
 -- First up is the addon definition!
 -- This information is shown in the Addon Manager.
 -- You also specify "unload" which is the function called when unloading your addon.
@@ -28,7 +40,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "0.2"
+  version = "1.0"
 }
 local raidmanager
 
@@ -91,21 +103,11 @@ local function CreateFilter(name, max, classtable, stattable, postable, continue
     data.continueflag = continueflag
     return data
 end
-DEFAULT_ODE_MAX = 4
-DEFAULT_MAX = 50
+
 local savedata, settings
 
 function GetDefaults()
-    local filters = {}
-    filters[1] = CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
-    filters[2] = CreateFilter("Ode", DEFAULT_ODE_MAX, {CLASS_HEALER, CLASS_SONGCRAFT}, {STAT_HEALING}, {21,22,23,24}, true)
-    filters[3] = CreateFilter("Tank", DEFAULT_MAX, {CLASS_OCCULTISM}, {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}, {1,2,3,4,6,11,16,7,8,9}, false)
-    filters[4] = CreateFilter("Mage", DEFAULT_MAX, {CLASS_MAGE}, {STAT_MAGIC}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
-    filters[5] = CreateFilter("Melee", DEFAULT_MAX, {CLASS_BATTLERAGE}, {STAT_MELEE}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
-    filters[6] = CreateFilter("Ranged", DEFAULT_MAX, {CLASS_ARCHER}, {STAT_RANGED}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
-    filters[7] = CreateFilter("Healer", DEFAULT_MAX, {CLASS_HEALER}, {STAT_HEALING}, {5,10,15,20,25,30,35,40,45,46,47,48,49,50}, false)
-
-    return filters
+    return SettingsWindow:GetDefaults()
 end
 
 function GetDefaultSettings()
@@ -176,24 +178,36 @@ local function GetStatValue(filterobject, data)
 end
 
 posstartarray = {}
-
+maxarray = {}
 local function ResetRaidTable()
     for i = 1, 50 do
         raidtable[i] = false
     end
     for i = 1, #savedata do
         posstartarray[i] = 1
+        maxarray[i] = 0
     end
 end
 
 local function FilterGetNext(filterobject, index)
     --api.Log:Info("FilterGetNext " .. posstartarray[index] .. " " .. #filterobject.posarray)
+    if maxarray[index] >= filterobject.max then
+        return 0
+    end
+
     for i = posstartarray[index], #filterobject.posarray do
         local idx = filterobject.posarray[i]
         --api.Log:Info(idx)
         if raidtable[idx] == false then
+            maxarray[index] = maxarray[index] + 1
             raidtable[idx] = true
             return idx
+        end
+    end
+    for i = 1, 50 do
+        if raidtable[i] == false then
+            raidtable[i] = true
+            return i
         end
     end
     return 0
@@ -331,6 +345,54 @@ end
 function OpenSettings()
      SettingsWindow:Open(savedata, settings, OnCloseSettings)
 end
+
+local counter = 0
+
+local teammember = 0
+local sortcounter = 0
+
+local function OnUpdate(dt)
+    counter = counter + 1
+    if counter >= 60 then
+        counter = 0
+        --api.Log:Info(api.Team)
+        --local myid, myuid = GetUnit("Player")
+        --myid = "Player"
+        if api.Team:IsPartyTeam() then
+            return
+        end
+        local mypos = api.Team:GetTeamPlayerIndex()
+        if mypos == 0 then
+            return
+        end
+        
+        local myunitid = "team" .. mypos
+        local isleader = api.Unit:UnitTeamAuthority(myunitid) == "leader"
+
+        if settings.autoquery then
+            teammember = teammember + 1
+            if teammember >= 51 then
+                teammember = 1
+            end
+
+            local unitid, uid = GetUnit(teammember)
+            if uid ~= nil then
+                local name = GetName(teammember)
+                local success, data, info = GetOrGetCache(unitid, uid, name)
+            end
+        end
+
+        if settings.autosort and isleader then
+            sortcounter = sortcounter + 1
+            if sortcounter == 3 then
+                SortRaid()
+                sortcounter = 0
+            end
+        end
+
+    end
+
+end
 -- The Load Function is called as soon as the game loads its UI. Use it to initialize anything you need!
 local function Load() 
     SettingsWindow = require("raidsort\\settingswindow")
@@ -361,12 +423,15 @@ end
 -- Unload is called when addons are reloaded.
 -- Here you want to destroy your windows and do other tasks you find useful.
 local function Unload()
-
+    if raidmanager == nil then
+        return
+    end
     if raidmanager.sortBtn ~= nil then
         raidmanager.sortBtn:Show(false)
         raidmanager.sortBtn = nil
     end
     if SettingsWindow ~= nil then
+        SettingsWindow:OnClose()
         SettingsWindow:Show(false)
         SettingsWindow = nil
     end
@@ -376,5 +441,6 @@ end
 raid_mgr_addon.OnLoad = Load
 raid_mgr_addon.OnUnload = Unload
 raid_mgr_addon.OnSettingToggle = OpenSettings
+api.On("UPDATE", OnUpdate)
 
 return raid_mgr_addon
