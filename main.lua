@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.5"
+  version = "1.0.6"
 }
 local raidmanager
 
@@ -78,7 +78,7 @@ local function Swap(fromindex, toindex)
 
     raidmanager.party[fromparty].member[frommember].eventWindow:OnDragStart()
     raidmanager.party[toparty].member[tomember].eventWindow:OnDragReceive()
-
+    raidmanager.party[fromparty].member[frommember].eventWindow:OnDragStop()
 end
 function sortvalue(a, b)
     return a.value > b.value
