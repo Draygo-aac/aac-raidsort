@@ -1,6 +1,8 @@
 local api = require("api")
 local CreateTooltip = nil
 
+local SettingsWindow
+
 CLASS_BATTLERAGE = 1
 CLASS_WITCHCRAFT = 2
 CLASS_DEFENSE = 3
@@ -40,7 +42,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.1"
+  version = "1.0.2"
 }
 local raidmanager
 
@@ -333,7 +335,7 @@ local function SortRaid()
         end
     end
 end
-local SettingsWindow
+
 
 
 
