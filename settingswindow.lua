@@ -960,11 +960,11 @@ function w:GetDefaults()
     return filters
 end
 
-function w:GetDefaultSettings()
-    local settingfile = {}
-    settingfile["autoquery"] = true
-    settingfile["autosort"] = false
-    return settingfile
+function w:DefaultSettings()
+    local settingdata = {}
+    settingdata["autoquery"] = true
+    settingdata["autosort"] = false
+    return settingdata
 end
 
 function CreateFilterRows(filters)
@@ -1017,5 +1017,5 @@ function w:Save()
 end
 
 w.closeButton:SetHandler("OnClick", w.Save)
-
+api.Log:Info("Settings loaded")
 return w

@@ -42,7 +42,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.4"
+  version = "1.0.5"
 }
 local raidmanager
 
@@ -108,12 +108,27 @@ end
 
 local savedata, settings
 
+
+
 function GetDefaults()
-    return SettingsWindow:GetDefaults()
+    local filters = {}
+    filters[1] = CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
+    filters[2] = CreateFilter("Ode", DEFAULT_ODE_MAX, {CLASS_HEALER, CLASS_SONGCRAFT}, {STAT_HEALING}, {21,22,23,24}, true)
+    filters[3] = CreateFilter("Tank", DEFAULT_MAX, {CLASS_OCCULTISM}, {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}, {1,2,3,4,6,11,16,7,8,9}, false)
+    filters[4] = CreateFilter("Mage", DEFAULT_MAX, {CLASS_MAGE}, {STAT_MAGIC}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
+    filters[5] = CreateFilter("Melee", DEFAULT_MAX, {CLASS_BATTLERAGE}, {STAT_MELEE}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
+    filters[6] = CreateFilter("Ranged", DEFAULT_MAX, {CLASS_ARCHER}, {STAT_RANGED}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
+    filters[7] = CreateFilter("Healer", DEFAULT_MAX, {CLASS_HEALER}, {STAT_HEALING}, {5,10,15,20,25,30,35,40,45,46,47,48,49,50}, false)
+
+    return filters
 end
 
 function GetDefaultSettings()
-    return SettingsWindow:GetDefaultSettings()
+-- i hate lua
+    local settingdata = {}
+    settingdata["autoquery"] = true
+    settingdata["autosort"] = false
+    return settingdata
 end
 
 SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
@@ -126,18 +141,18 @@ function LoadSettings()
     return api.File:Read(_SETTINGSFILE)
 end
 
-function LoadData()
+function LoadData(window)
     local loaded, data = pcall(LoadFilters)
     if loaded and data ~= nil then 
         savedata = data
     else
-        savedata = GetDefaults()
+        savedata = GetDefaults(window)
     end
     local loadsettings, settingdata = pcall(LoadSettings)
     if loadsettings and settingdata ~= nil then
         settings = settingdata
     else
-        settings = GetDefaultSettings()
+        settings = GetDefaultSettings(window)
     end
 end
 
@@ -409,7 +424,7 @@ end
 local function Load() 
     SettingsWindow = require("raidsort\\settingswindow")
     CreateTooltip = api._Library.UI.CreateTooltip
-    LoadData()
+    LoadData(SettingsWindow)
     SaveData(savedata, settings)
 
     raidmanager = ADDON:GetContent(UIC.RAID_MANAGER )
