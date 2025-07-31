@@ -42,7 +42,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.3"
+  version = "1.0.4"
 }
 local raidmanager
 

@@ -984,10 +984,12 @@ function w:Refresh()
 end
 
 function w:Open(filters, settings, onclose)
-    if (filters == nil)
+    if (filters == nil) then
         filters = w:GetDefaults()
-    if (settings == nil)
+    end
+    if (settings == nil) then
         settings = w:GetDefaultSettings()
+    end
 	w.filters = filters
     w.Refresh()
 	w.settings = settings
