@@ -42,7 +42,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.2"
+  version = "1.0.3"
 }
 local raidmanager
 
@@ -113,10 +113,7 @@ function GetDefaults()
 end
 
 function GetDefaultSettings()
-    local settingfile = {}
-    settingfile["autoquery"] = true
-    settingfile["autosort"] = false
-    return settingfile
+    return SettingsWindow:GetDefaultSettings()
 end
 
 SAVEFILEFILTERS = "raidsort\\data\\filters.lua"

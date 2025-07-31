@@ -960,8 +960,16 @@ function w:GetDefaults()
     return filters
 end
 
+function w:GetDefaultSettings()
+    local settingfile = {}
+    settingfile["autoquery"] = true
+    settingfile["autosort"] = false
+    return settingfile
+end
+
 function CreateFilterRows(filters)
     filterlist:DeleteAllDatas()
+
     for i = 1, #filters do
         filterlist:InsertRowData(i, COLUMNS, filters[i])
     end
@@ -976,6 +984,10 @@ function w:Refresh()
 end
 
 function w:Open(filters, settings, onclose)
+    if (filters == nil)
+        filters = w:GetDefaults()
+    if (settings == nil)
+        settings = w:GetDefaultSettings()
 	w.filters = filters
     w.Refresh()
 	w.settings = settings
