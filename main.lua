@@ -35,6 +35,9 @@ STAT_ARRAY[SORT_MAGIC] = {STAT_MAGIC}
 STAT_ARRAY[SORT_HEALING] = {STAT_HEALING}
 STAT_ARRAY[SORT_DEFENSE] = {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}
 
+DEFAULT_ODE_MAX = 4
+DEFAULT_MAX = 50
+
 -- First up is the addon definition!
 -- This information is shown in the Addon Manager.
 -- You also specify "unload" which is the function called when unloading your addon.
@@ -108,8 +111,6 @@ end
 
 local savedata, settings
 
-
-
 function GetDefaults()
     local filters = {}
     filters[1] = CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
@@ -123,8 +124,8 @@ function GetDefaults()
     return filters
 end
 
+
 function GetDefaultSettings()
--- i hate lua
     local settingdata = {}
     settingdata["autoquery"] = true
     settingdata["autosort"] = false
@@ -141,18 +142,18 @@ function LoadSettings()
     return api.File:Read(_SETTINGSFILE)
 end
 
-function LoadData(window)
+function LoadData()
     local loaded, data = pcall(LoadFilters)
     if loaded and data ~= nil then 
         savedata = data
     else
-        savedata = GetDefaults(window)
+        savedata = GetDefaults()
     end
     local loadsettings, settingdata = pcall(LoadSettings)
     if loadsettings and settingdata ~= nil then
         settings = settingdata
     else
-        settings = GetDefaultSettings(window)
+        settings = GetDefaultSettings()
     end
 end
 
@@ -424,7 +425,7 @@ end
 local function Load() 
     SettingsWindow = require("raidsort\\settingswindow")
     CreateTooltip = api._Library.UI.CreateTooltip
-    LoadData(SettingsWindow)
+    LoadData()
     SaveData(savedata, settings)
 
     raidmanager = ADDON:GetContent(UIC.RAID_MANAGER )

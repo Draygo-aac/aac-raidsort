@@ -203,7 +203,7 @@ end
 
 --Rule edit frame
 
-local filtersettingsframe = api.Interface:CreateWindow("RaidSortSettingsWnd", "Rule Settings", 300, 530)
+filtersettingsframe = api.Interface:CreateWindow("RaidSortSettingsWnd", "Rule Settings", 300, 530)
 filtersettingsframe:SetTitle("Rule Settings")
 filtersettingsframe:AddAnchor("CENTER", "UIParent", 0, 0)
 filtersettingsframe:SetCloseOnEscape(true)
@@ -960,7 +960,7 @@ function w:GetDefaults()
     return filters
 end
 
-function w:DefaultSettings()
+function w:GetDefaultSettings()
     local settingdata = {}
     settingdata["autoquery"] = true
     settingdata["autosort"] = false
