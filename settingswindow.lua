@@ -948,6 +948,7 @@ function w:CreateFilter(name, max, classtable, stattable, postable, continueflag
 end
 
 function w:GetDefaults()
+
     local filters = {}
     filters[1] = w:CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
     filters[2] = w:CreateFilter("Ode", DEFAULT_ODE_MAX, {CLASS_HEALER, CLASS_SONGCRAFT}, {STAT_HEALING}, {21,22,23,24}, true)
@@ -960,12 +961,7 @@ function w:GetDefaults()
     return filters
 end
 
-function w:GetDefaultSettings()
-    local settingdata = {}
-    settingdata["autoquery"] = true
-    settingdata["autosort"] = false
-    return settingdata
-end
+
 
 function CreateFilterRows(filters)
     filterlist:DeleteAllDatas()
@@ -984,12 +980,8 @@ function w:Refresh()
 end
 
 function w:Open(filters, settings, onclose)
-    if (filters == nil) then
-        filters = w:GetDefaults()
-    end
-    if (settings == nil) then
-        settings = w:GetDefaultSettings()
-    end
+
+
 	w.filters = filters
     w.Refresh()
 	w.settings = settings

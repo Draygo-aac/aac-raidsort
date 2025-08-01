@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.6"
+  version = "1.0.6.2"
 }
 local raidmanager
 
@@ -126,10 +126,9 @@ end
 
 
 function GetDefaultSettings()
-    local settingdata = {}
-    settingdata["autoquery"] = true
-    settingdata["autosort"] = false
-    return settingdata
+    settings = {}
+    settings["autoquery"] = true
+    settings["autosort"] = false
 end
 
 SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
@@ -153,7 +152,7 @@ function LoadData()
     if loadsettings and settingdata ~= nil then
         settings = settingdata
     else
-        settings = GetDefaultSettings()
+       GetDefaultSettings()
     end
 end
 
