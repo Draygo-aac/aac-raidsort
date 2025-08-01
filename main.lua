@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.7"
+  version = "1.0.8"
 }
 local raidmanager
 
@@ -110,9 +110,9 @@ local function CreateFilter(name, max, classtable, stattable, postable, continue
 end
 
 local savedata
-local settings
+local sortsettings
 
-function GetDefaults()
+local function GetDefaults()
     local filters = {}
     filters[1] = CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
     filters[2] = CreateFilter("Ode", DEFAULT_ODE_MAX, {CLASS_HEALER, CLASS_SONGCRAFT}, {STAT_HEALING}, {21,22,23,24}, true)
@@ -127,9 +127,9 @@ end
 
 
 function GetDefaultSettings()
-    settings = {}
-    settings.autoquery = true
-    settings.autosort = false
+    sortsettings = {}
+    sortsettings.autoquery = true
+    sortsettings.autosort = false
 end
 
 SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
@@ -142,7 +142,8 @@ function LoadSettings()
     return api.File:Read(_SETTINGSFILE)
 end
 
-function LoadData()
+function LoadSortData()
+    
     local loaded, data = pcall(LoadFilters)
     if loaded and data ~= nil then 
         savedata = data
@@ -151,15 +152,15 @@ function LoadData()
     end
     local loadsettings, settingdata = pcall(LoadSettings)
     if loadsettings and settingdata ~= nil then
-        settings = settingdata
+        sortsettings = settingdata
     else
        GetDefaultSettings()
     end
 end
 
-function SaveData(filtersettings, globalsettings)
-	api.File:Write(SAVEFILEFILTERS, filtersettings)
-    api.File:Write(_SETTINGSFILE, globalsettings)
+function SaveSortData()
+	api.File:Write(SAVEFILEFILTERS, savedata)
+    api.File:Write(_SETTINGSFILE, sortsettings)
 end
 
 
@@ -353,17 +354,18 @@ end
 
 
 function OnCloseSettings(filters, newsettings)
+    
     if filters ~= savedata then
         savedata = filters
     end
     if settings ~= newsettings then
-        settings = newsettings
+        sortsettings = newsettings
     end
 
-    SaveData(savedata, settings)
+    SaveSortData()
 end
 function OpenSettings()
-     SettingsWindow:Open(savedata, settings, OnCloseSettings)
+     SettingsWindow:Open(savedata, sortsettings, OnCloseSettings)
 end
 
 local counter = 0
@@ -394,7 +396,7 @@ local function DoUpdate(dt)
         local myunitid = "team" .. mypos
         local isleader = api.Unit:UnitTeamAuthority(myunitid) == "leader"
 
-        if settings.autoquery then
+        if sortsettings.autoquery then
             teammember = teammember + 1
             if teammember >= 51 then
                 teammember = 1
@@ -407,7 +409,7 @@ local function DoUpdate(dt)
             end
         end
 
-        if settings.autosort and isleader then
+        if sortsettings.autosort and isleader then
             sortcounter = sortcounter + 1
             if sortcounter >= 3 then
                 SortRaid()
@@ -424,17 +426,15 @@ local function OnUpdate(dt)
     local success, err = pcall(DoUpdate, dt)
     if success == false then
         api.Log:Err(err)
-
     end
-    
 end
 -- The Load Function is called as soon as the game loads its UI. Use it to initialize anything you need!
 local function Load() 
     SettingsWindow = require("raidsort\\settingswindow")
     CreateTooltip = api._Library.UI.CreateTooltip
-    LoadData()
-    SaveData(savedata, settings)
-
+    LoadSortData()
+    SaveSortData()
+    --SandboxBroken()
     raidmanager = ADDON:GetContent(UIC.RAID_MANAGER )
 
     if raidmanager.sortBtn ~= nil then
