@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.6.2"
+  version = "1.0.7"
 }
 local raidmanager
 
@@ -109,7 +109,8 @@ local function CreateFilter(name, max, classtable, stattable, postable, continue
     return data
 end
 
-local savedata, settings
+local savedata
+local settings
 
 function GetDefaults()
     local filters = {}
@@ -127,8 +128,8 @@ end
 
 function GetDefaultSettings()
     settings = {}
-    settings["autoquery"] = true
-    settings["autosort"] = false
+    settings.autoquery = true
+    settings.autosort = false
 end
 
 SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
@@ -352,8 +353,13 @@ end
 
 
 function OnCloseSettings(filters, newsettings)
-    savedata = filters
-    settings = newsettings
+    if filters ~= savedata then
+        savedata = filters
+    end
+    if settings ~= newsettings then
+        settings = newsettings
+    end
+
     SaveData(savedata, settings)
 end
 function OpenSettings()
@@ -376,10 +382,12 @@ local function DoUpdate(dt)
         counter = 0
 
         if api.Team:IsPartyTeam() then
+            updaterunning = false
             return
         end
         local mypos = api.Team:GetTeamPlayerIndex()
         if mypos == 0 then
+            updaterunning = false
             return
         end
         
