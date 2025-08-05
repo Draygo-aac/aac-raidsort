@@ -3,40 +3,40 @@ local CreateTooltip = nil
 
 local SettingsWindow
 
-CLASS_BATTLERAGE = 1
-CLASS_WITCHCRAFT = 2
-CLASS_DEFENSE = 3
-CLASS_AURAMANCY = 4
-CLASS_OCCULTISM = 5
-CLASS_ARCHER = 6
-CLASS_MAGE = 7
-CLASS_SHADOWPLAY = 8
-CLASS_SONGCRAFT = 9
-CLASS_HEALER = 10
+local CLASS_BATTLERAGE = 1
+local CLASS_WITCHCRAFT = 2
+local CLASS_DEFENSE = 3
+local CLASS_AURAMANCY = 4
+local CLASS_OCCULTISM = 5
+local CLASS_ARCHER = 6
+local CLASS_MAGE = 7
+local CLASS_SHADOWPLAY = 8
+local CLASS_SONGCRAFT = 9
+local CLASS_HEALER = 10
 
-STAT_MELEE = 8
-STAT_RANGED = 9
-STAT_MAGIC = 10
-STAT_HEALING = 11
-STAT_MELEEHP = 12
-STAT_RANGEDHP = 13
-STAT_MAGICHP = 14
+local STAT_MELEE = 8
+local STAT_RANGED = 9
+local STAT_MAGIC = 10
+local STAT_HEALING = 11
+local STAT_MELEEHP = 12
+local STAT_RANGEDHP = 13
+local STAT_MAGICHP = 14
 
-SORT_MELEE = 1
-SORT_RANGED = 2
-SORT_MAGIC = 3
-SORT_HEALING = 4
-SORT_DEFENSE = 5
+local SORT_MELEE = 1
+local SORT_RANGED = 2
+local SORT_MAGIC = 3
+local SORT_HEALING = 4
+local SORT_DEFENSE = 5
 
-STAT_ARRAY = {}
+local STAT_ARRAY = {}
 STAT_ARRAY[SORT_MELEE] = {STAT_MELEE}
 STAT_ARRAY[SORT_RANGED] = {STAT_RANGED}
 STAT_ARRAY[SORT_MAGIC] = {STAT_MAGIC}
 STAT_ARRAY[SORT_HEALING] = {STAT_HEALING}
 STAT_ARRAY[SORT_DEFENSE] = {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}
 
-DEFAULT_ODE_MAX = 4
-DEFAULT_MAX = 50
+local DEFAULT_ODE_MAX = 4
+local DEFAULT_MAX = 50
 
 -- First up is the addon definition!
 -- This information is shown in the Addon Manager.
@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.0.8"
+  version = "1.1"
 }
 local raidmanager
 
@@ -80,10 +80,12 @@ local function Swap(fromindex, toindex)
     raidmanager.party[toparty].member[tomember].eventWindow:OnDragReceive()
     raidmanager.party[fromparty].member[frommember].eventWindow:OnDragStop()
 end
-function sortvalue(a, b)
+
+local function sortvalue(a, b)
     return a.value > b.value
 end
-function RemoveFromTable(_table, id)
+
+local function RemoveFromTable(_table, id)
     for i = 1, #_table do
         if _table[i].id == id then
             table.remove(_table, i)
@@ -91,7 +93,9 @@ function RemoveFromTable(_table, id)
         end
     end
 end
+
 local raidtable = {}
+
 for i = 1,50 do
     table.insert(raidtable, false)
 end
@@ -126,23 +130,23 @@ local function GetDefaults()
 end
 
 
-function GetDefaultSettings()
+local function GetDefaultSettings()
     sortsettings = {}
     sortsettings.autoquery = true
     sortsettings.autosort = false
 end
 
-SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
-_SETTINGSFILE = "raidsort\\data\\settings.lua"
+local SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
+local _SETTINGSFILE = "raidsort\\data\\settings.lua"
 
-function LoadFilters()
+local function LoadFilters()
 	return api.File:Read(SAVEFILEFILTERS)
 end
-function LoadSettings()
+local function LoadSettings()
     return api.File:Read(_SETTINGSFILE)
 end
 
-function LoadSortData()
+local function LoadSortData()
     
     local loaded, data = pcall(LoadFilters)
     if loaded and data ~= nil then 
@@ -158,7 +162,7 @@ function LoadSortData()
     end
 end
 
-function SaveSortData()
+local function SaveSortData()
 	api.File:Write(SAVEFILEFILTERS, savedata)
     api.File:Write(_SETTINGSFILE, sortsettings)
 end
@@ -193,8 +197,9 @@ local function GetStatValue(filterobject, data)
     return retval
 end
 
-posstartarray = {}
-maxarray = {}
+local posstartarray = {}
+local maxarray = {}
+
 local function ResetRaidTable()
     for i = 1, 50 do
         raidtable[i] = false
@@ -233,8 +238,8 @@ local function GetUnitInfo(uid)
     return api.Unit:GetUnitInfoById(uid)
 end
 
-cachedData = {}
-cachedInfo = {}
+local cachedData = {}
+local cachedInfo = {}
 
 local function GetOrGetCache(unitid, uid, name)
     
@@ -293,9 +298,18 @@ local function GetMemberIndexByName(name)
     return nil
 end
 
-local function SortRaid()
+local sortstate = {}
+local sortdata = {}
+
+local function InitiateState()
+    sortstate.active = false
+    sortstate.step = 1
+    sortstate.playerlist = 1
+end
+
+local function BeginSort()
     ResetRaidTable()
-    local sortdata = {}
+    sortdata = {}
     for i = 1, #savedata do
         sortdata[i] = {}
     end
@@ -329,12 +343,34 @@ local function SortRaid()
             end
         end
     end
-    
-    for i = 1, #savedata do
+    sortstate.active = true
+    sortstate.step = 1
+    sortstate.playerlist = 1
+end
+
+local function OnSortPress()
+    if SettingsWindow:IsVisible() then
+        api.Log:Info("Cannot sort raid while settings window is open.")
+        return
+    end
+    SortRaid()
+end
+
+
+
+
+local function SortRaidStep()
+    if SettingsWindow:IsVisible() then
+        InitiateState() --cannot sort while Settings is open
+        return
+    end
+    for i = sortstate.step, #savedata do
         local playerlist = sortdata[i]
         local filterobject = savedata[i]
-        table.sort(playerlist, sortvalue)
-        for ii = 1, #playerlist do
+        if sortstate.playerlist == 1 then
+            table.sort(playerlist, sortvalue)
+        end
+        for ii = sortstate.playerlist, #playerlist do
             unit = playerlist[ii]
             pos = FilterGetNext(filterobject, i)
             if filterobject.continueflag == true then
@@ -343,40 +379,53 @@ local function SortRaid()
                 end
             end
             local idx = GetMemberIndexByName(unit.id)
-            if pos ~= 0 then
+            if pos ~= 0  and idx ~= pos then
                 Swap(idx, pos)
+                sortstate.playerlist = ii + 1
+                sortstate.step = i
+                return
             end
         end
+        sortstate.playerlist = 1
     end
+    sortstate.active = false
 end
 
-
-
-
-function OnCloseSettings(filters, newsettings)
+local function SortRaid()
+    if sortstate.active then
+        return
+    end
+    BeginSort()
     
+    SortRaidStep()
+end
+
+local function OnCloseSettings(filters, newsettings)
     if filters ~= savedata then
         savedata = filters
     end
+
     if settings ~= newsettings then
         sortsettings = newsettings
     end
 
     SaveSortData()
 end
-function OpenSettings()
+
+local function OpenSettings()
      SettingsWindow:Open(savedata, sortsettings, OnCloseSettings)
 end
 
 local counter = 0
-
 local teammember = 0
 local sortcounter = 0
-
 
 local function DoUpdate(dt)
     if updaterunning then
         return
+    end
+    if sortstate.active then
+        SortRaidStep()
     end
     updaterunning = true
     counter = counter + 1
@@ -422,14 +471,15 @@ local function DoUpdate(dt)
 end
 
 local function OnUpdate(dt)
-    
     local success, err = pcall(DoUpdate, dt)
     if success == false then
         api.Log:Err(err)
     end
 end
+
 -- The Load Function is called as soon as the game loads its UI. Use it to initialize anything you need!
 local function Load() 
+    InitiateState()
     SettingsWindow = require("raidsort\\settingswindow")
     CreateTooltip = api._Library.UI.CreateTooltip
     LoadSortData()
@@ -451,8 +501,7 @@ local function Load()
     sortBtn.tooltip:AddAnchor("BOTTOM", sortBtn, "TOP", 0, -1)
     raidmanager.sortBtn = sortBtn
 
-    sortBtn:SetHandler("OnClick", SortRaid)
-
+    sortBtn:SetHandler("OnClick", OnSortPress)
 end
 
 -- Unload is called when addons are reloaded.

@@ -1,25 +1,26 @@
 local CreateCheckButton = api._Library.UI.CreateCheckButton
 local w
-VERSION = 1.0
 
-ROWPADDING = 16
+local VERSION = 1.0
 
-LIST_COLUMN_HEIGHT = 35
-ROWDATA_COLUMN_OFFSET = 1
+local ROWPADDING = 16
 
-CLASS_NONE = 0
-CLASS_BATTLERAGE = 1
-CLASS_WITCHCRAFT = 2
-CLASS_DEFENSE = 3
-CLASS_AURAMANCY = 4
-CLASS_OCCULTISM = 5
-CLASS_ARCHER = 6
-CLASS_MAGE = 7
-CLASS_SHADOWPLAY = 8
-CLASS_SONGCRAFT = 9
-CLASS_HEALER = 10
+local LIST_COLUMN_HEIGHT = 35
+local ROWDATA_COLUMN_OFFSET = 1
 
-CLASSTABLE = {}
+local CLASS_NONE = 0
+local CLASS_BATTLERAGE = 1
+local CLASS_WITCHCRAFT = 2
+local CLASS_DEFENSE = 3
+local CLASS_AURAMANCY = 4
+local CLASS_OCCULTISM = 5
+local CLASS_ARCHER = 6
+local CLASS_MAGE = 7
+local CLASS_SHADOWPLAY = 8
+local CLASS_SONGCRAFT = 9
+local CLASS_HEALER = 10
+
+local CLASSTABLE = {}
 CLASSTABLE[CLASS_BATTLERAGE] = "B "
 CLASSTABLE[CLASS_WITCHCRAFT] = "W "
 CLASSTABLE[CLASS_DEFENSE] = "D "
@@ -31,8 +32,8 @@ CLASSTABLE[CLASS_SHADOWPLAY] = "Sh "
 CLASSTABLE[CLASS_SONGCRAFT] = "Son "
 CLASSTABLE[CLASS_HEALER] = "V "
 
-OFFSETFORCONTROL = 1
-CLASSTABLENAME = {}
+local OFFSETFORCONTROL = 1
+local CLASSTABLENAME = {}
 CLASSTABLENAME[CLASS_NONE + OFFSETFORCONTROL] = "None        "
 CLASSTABLENAME[CLASS_BATTLERAGE + OFFSETFORCONTROL] = "Battlerage"
 CLASSTABLENAME[CLASS_WITCHCRAFT + OFFSETFORCONTROL] = "Witchcraft"
@@ -45,29 +46,29 @@ CLASSTABLENAME[CLASS_SHADOWPLAY + OFFSETFORCONTROL] = "Shadowplay"
 CLASSTABLENAME[CLASS_SONGCRAFT + OFFSETFORCONTROL] = "Songcraft"
 CLASSTABLENAME[CLASS_HEALER + OFFSETFORCONTROL] = "Vitalism"
 
-STAT_MELEE = 8
-STAT_RANGED = 9
-STAT_MAGIC = 10
-STAT_HEALING = 11
-STAT_MELEEHP = 12
-STAT_RANGEDHP = 13
-STAT_MAGICHP = 14
+local STAT_MELEE = 8
+local STAT_RANGED = 9
+local STAT_MAGIC = 10
+local STAT_HEALING = 11
+local STAT_MELEEHP = 12
+local STAT_RANGEDHP = 13
+local STAT_MAGICHP = 14
 
-SORT_MELEE = 1
-SORT_RANGED = 2
-SORT_MAGIC = 3
-SORT_HEALING = 4
-SORT_DEFENSE = 5
-SORT_OTHER = 0
+local SORT_MELEE = 1
+local SORT_RANGED = 2
+local SORT_MAGIC = 3
+local SORT_HEALING = 4
+local SORT_DEFENSE = 5
+local SORT_OTHER = 0
 
-STAT_ARRAY = {}
+local STAT_ARRAY = {}
 STAT_ARRAY[SORT_MELEE] = {STAT_MELEE}
 STAT_ARRAY[SORT_RANGED] = {STAT_RANGED}
 STAT_ARRAY[SORT_MAGIC] = {STAT_MAGIC}
 STAT_ARRAY[SORT_HEALING] = {STAT_HEALING}
 STAT_ARRAY[SORT_DEFENSE] = {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}
 
-STAT_ARRAYNAME = {}
+local STAT_ARRAYNAME = {}
 STAT_ARRAYNAME[SORT_OTHER] = "Other"
 STAT_ARRAYNAME[SORT_MELEE] = "Melee Damage"
 STAT_ARRAYNAME[SORT_RANGED] = "Ranged Damage"
@@ -75,12 +76,12 @@ STAT_ARRAYNAME[SORT_MAGIC] = "Magic Damage"
 STAT_ARRAYNAME[SORT_HEALING] = "Healing Power"
 STAT_ARRAYNAME[SORT_DEFENSE] = "Tank"
 
-DEFAULT_ODE_MAX = 4
-DEFAULT_MAX = 50
+local DEFAULT_ODE_MAX = 4
+local DEFAULT_MAX = 50
 
 
 
-function SetButtonFontColor(button, color)
+local function SetButtonFontColor(button, color)
     local n = color.normal
     local h = color.highlight
     local p = color.pushed
@@ -91,7 +92,7 @@ function SetButtonFontColor(button, color)
     button:SetDisabledTextColor(d[1], d[2], d[3], d[4])
 end
 
-function GetButtonDefaultFontColor()
+local function GetButtonDefaultFontColor()
     local color = {}
     color.normal = {ConvertColor(104), ConvertColor(68), ConvertColor(18), 1}
     color.highlight = {ConvertColor(154), ConvertColor(96), ConvertColor(16), 1}
@@ -100,7 +101,7 @@ function GetButtonDefaultFontColor()
     return color
 end
 
-function SettingListColumn(listCtrl, column)
+local function SettingListColumn(listCtrl, column)
   listCtrl:SetColumnHeight(LIST_COLUMN_HEIGHT)
   api.Interface:ApplyButtonSkin(column, BUTTON_BASIC.LISTCTRL_COLUMN)
   column.style:SetShadow(false)
@@ -108,7 +109,7 @@ function SettingListColumn(listCtrl, column)
   SetButtonFontColor(column, GetButtonDefaultFontColor())
 end
 
-function DrawListCtrlUnderLine(listCtrl, offsetY, colorWhite, offsetX)
+local function DrawListCtrlUnderLine(listCtrl, offsetY, colorWhite, offsetX)
   if colorWhite == nil then
     colorWhite = false
   end
@@ -135,7 +136,7 @@ function DrawListCtrlUnderLine(listCtrl, offsetY, colorWhite, offsetX)
   end
 end
 
-function DrawListCtrlColumnSperatorLine(widget, totalCount, count, colorWhite)
+local function DrawListCtrlColumnSperatorLine(widget, totalCount, count, colorWhite)
   local inset = 3
   if colorWhite == nil then
     colorWhite = false
@@ -175,7 +176,7 @@ local function GetColumnRow(index)
     return column, row
 end
 
-function getSortOption(array)
+local function getSortOption(array)
     if (array == nil or #array == 0) then
         return SORT_OTHER
     end
@@ -203,7 +204,7 @@ end
 
 --Rule edit frame
 
-filtersettingsframe = api.Interface:CreateWindow("RaidSortSettingsWnd", "Rule Settings", 300, 530)
+local filtersettingsframe = api.Interface:CreateWindow("RaidSortSettingsWnd", "Rule Settings", 300, 530)
 filtersettingsframe:SetTitle("Rule Settings")
 filtersettingsframe:AddAnchor("CENTER", "UIParent", 0, 0)
 filtersettingsframe:SetCloseOnEscape(true)
@@ -212,7 +213,7 @@ filtersettingsframe:Show(false)
 filtersettingsframe.parentframe = nil
 filtersettingsframe.dataline = 0
 filtersettingsframe.rawdata = nil
-function all_trim(s)
+local function all_trim(s)
    return s:match( "^%s*(.-)%s*$" )
 end
 
@@ -327,7 +328,7 @@ filtersettingsframe.nameEditbox = nameEditbox
 
 
 labeltext = "Rule Type:"
-RuleTypeLabel = filtersettingsframe:CreateChildWidget("label", "RuleTypeLabel", 0, true)
+local RuleTypeLabel = filtersettingsframe:CreateChildWidget("label", "RuleTypeLabel", 0, true)
 RuleTypeLabel:AddAnchor("BOTTOMLEFT", RuleNameLabel, 0, (FONT_SIZE.LARGE + ROWPADDING))
 RuleTypeLabel:SetText(labeltext)
 RuleTypeLabel:SetHeight(FONT_SIZE.LARGE)
@@ -348,7 +349,7 @@ filtersettingsframe.typeButton = typeButton
 
 
 labeltext = "Max:"
-MaxLabel = filtersettingsframe:CreateChildWidget("label", "MaxLabel", 0, true)
+local MaxLabel = filtersettingsframe:CreateChildWidget("label", "MaxLabel", 0, true)
 MaxLabel:AddAnchor("BOTTOMLEFT", RuleTypeLabel, 0, (FONT_SIZE.LARGE + ROWPADDING))
 MaxLabel:SetText(labeltext)
 MaxLabel:SetHeight(FONT_SIZE.LARGE)
@@ -366,7 +367,7 @@ maxEditbox:SetMaxTextLength(2)
 filtersettingsframe.maxEditbox = maxEditbox
 
 labeltext = "Players:"
-PlayerLabel = filtersettingsframe:CreateChildWidget("label", "PlayerLabel", 0, true)
+local PlayerLabel = filtersettingsframe:CreateChildWidget("label", "PlayerLabel", 0, true)
 PlayerLabel:AddAnchor("BOTTOMLEFT", MaxLabel, 0, (FONT_SIZE.LARGE + ROWPADDING))
 PlayerLabel:SetText(labeltext)
 PlayerLabel:SetHeight(FONT_SIZE.LARGE)
@@ -377,7 +378,7 @@ PlayerLabel.style:SetAlign(3)
 ApplyTextColor(PlayerLabel, FONT_COLOR.DEFAULT)
 PlayerLabel:Show(false)
 
-PlayerListBox = W_CTRL.CreateMultiLineEdit("PlayerListBox", filtersettingsframe)
+local PlayerListBox = W_CTRL.CreateMultiLineEdit("PlayerListBox", filtersettingsframe)
 PlayerListBox:AddAnchor("TOPLEFT", PlayerLabel, "TOPRIGHT", 20, 0)
 PlayerListBox:SetExtent(170,130)
 PlayerListBox:Show(false)
@@ -387,7 +388,7 @@ PlayerListBox:SetInset(5, 5, 5, 5)
 filtersettingsframe.PlayerListBox = PlayerListBox
 
 labeltext = "Class:"
-ClassLabel = filtersettingsframe:CreateChildWidget("label", "ClassLabel", 0, true)
+local ClassLabel = filtersettingsframe:CreateChildWidget("label", "ClassLabel", 0, true)
 ClassLabel:AddAnchor("BOTTOMLEFT", MaxLabel, 0, (FONT_SIZE.LARGE + ROWPADDING))
 ClassLabel:SetText(labeltext)
 ClassLabel:SetHeight(FONT_SIZE.LARGE)
@@ -399,7 +400,7 @@ ApplyTextColor(ClassLabel, FONT_COLOR.DEFAULT)
 
 
 
-CLASSBUTTONWIDTH = 100
+local CLASSBUTTONWIDTH = 100
 filtersettingsframe.class = {}
 
 
@@ -435,7 +436,7 @@ filtersettingsframe.class[3] = class3Button
 
 
 labeltext = "Stat:"
-StatLabel = filtersettingsframe:CreateChildWidget("label", "StatLabel", 0, true)
+local StatLabel = filtersettingsframe:CreateChildWidget("label", "StatLabel", 0, true)
 StatLabel:AddAnchor("BOTTOMLEFT", ClassLabel, 0, (FONT_SIZE.LARGE + ROWPADDING) + 70)
 StatLabel:SetText(labeltext)
 StatLabel:SetHeight(FONT_SIZE.LARGE)
@@ -454,7 +455,7 @@ statButton:Select(1)
 filtersettingsframe.statButton = statButton
 
 labeltext = "Position:"
-PositionLabel = filtersettingsframe:CreateChildWidget("label", "PositionLabel", 0, true)
+local PositionLabel = filtersettingsframe:CreateChildWidget("label", "PositionLabel", 0, true)
 PositionLabel:AddAnchor("BOTTOMLEFT", StatLabel, 0, (FONT_SIZE.LARGE + ROWPADDING))
 PositionLabel:SetText(labeltext)
 PositionLabel:SetHeight(FONT_SIZE.LARGE)
@@ -488,8 +489,8 @@ end
 filtersettingsframe.resetposButton:SetHandler("OnClick", filtersettingsframe.ResetPosArray)
 
 
-GRIDPADDING = 17
-COLUMNPADDING = 36
+local GRIDPADDING = 17
+local COLUMNPADDING = 36
 
 
 for i = 1, 50 do
@@ -530,6 +531,7 @@ for i = 1, 50 do
     filtersettingsframe.positionbutton[i] = checkbutton
     
 end
+
 function typeButton:SelectedProc()
     if filtersettingsframe.loading then
         return
@@ -561,6 +563,7 @@ function typeButton:SelectedProc()
         end
     end
 end
+
 filtersettingsframe.loading = false
 function filtersettingsframe:Open(line)
    
@@ -628,7 +631,7 @@ end
 
 --
 
-w = api.Interface:CreateWindow("RaidSortSettingsWnd", "Raid Sort Settings", 600, 700)
+local w = api.Interface:CreateWindow("RaidSortSettingsWnd", "Raid Sort Settings", 600, 700)
 
 w:SetTitle("Raid Sort Settings")
 w:AddAnchor("CENTER", "UIParent", 0, 0)
@@ -643,7 +646,7 @@ w.closeButton = closeButton
 w.Refresh = nil
 
 local text = "Auto-Poll:"
-AutoPollLabel = w:CreateChildWidget("label", "AutoPollLabel", 0, true)
+local AutoPollLabel = w:CreateChildWidget("label", "AutoPollLabel", 0, true)
 AutoPollLabel:AddAnchor("TOPLEFT", w, 15, 20 + (FONT_SIZE.LARGE + ROWPADDING))
 AutoPollLabel:SetText(text)
 AutoPollLabel:SetHeight(FONT_SIZE.LARGE)
@@ -662,7 +665,7 @@ w.AutoPoll:Show(true)
 
 --Enable Auto Swap
 local text = "Auto-Sort:"
-AutoSortLabel = w:CreateChildWidget("label", "AutoSortLabel", 0, true)
+local AutoSortLabel = w:CreateChildWidget("label", "AutoSortLabel", 0, true)
 AutoSortLabel:AddAnchor("BOTTOMLEFT", AutoPollLabel, 0 , (FONT_SIZE.LARGE + ROWPADDING))
 AutoSortLabel:SetText(text)
 AutoSortLabel:SetHeight(FONT_SIZE.LARGE)
@@ -680,7 +683,7 @@ w.AutoSort:Show(true)
 
 --Create Filter Header
 text = "Filters:"
-FilterLabel = w:CreateChildWidget("label", "FilterLabel", 0, true)
+local FilterLabel = w:CreateChildWidget("label", "FilterLabel", 0, true)
 FilterLabel:AddAnchor("BOTTOMLEFT", AutoSortLabel, 0 , (FONT_SIZE.LARGE + ROWPADDING))
 FilterLabel:SetText(text)
 FilterLabel:SetHeight(FONT_SIZE.LARGE)
@@ -746,14 +749,14 @@ end
 w.addButton:SetHandler("OnClick", w.AddFilter)
 w.defaultsButton:SetHandler("OnClick", w.ResetToDefault)
 
-SetNameFunc = function(subItem, info, setValue)
+local SetNameFunc = function(subItem, info, setValue)
     subItem:SetText(info.name)
 end
-SetMaxFunc = function(subItem, info, setValue)
+local SetMaxFunc = function(subItem, info, setValue)
     subItem:SetText(tostring(info.max))
 end
 
-SetPTFunc = function(subItem, info, setValue)
+local SetPTFunc = function(subItem, info, setValue)
     if info.isplayertable then
         subItem:SetText("Player")
     else
@@ -762,7 +765,7 @@ SetPTFunc = function(subItem, info, setValue)
     
 end
 
-SetClassFilterFunc = function(subItem, info, setValue)
+local SetClassFilterFunc = function(subItem, info, setValue)
     if info.isplayertable or info.classtable == nil then
         subItem:SetText("...")
         return
@@ -773,7 +776,8 @@ SetClassFilterFunc = function(subItem, info, setValue)
     end
     subItem:SetText(text)
 end
-SetStatFunc = function(subItem, info, setValue)
+
+local SetStatFunc = function(subItem, info, setValue)
 
     if (info.stat == nil or #info.stat == 0) then
         subItem:SetText("n/a")
@@ -803,18 +807,20 @@ SetStatFunc = function(subItem, info, setValue)
     end
     subItem:SetText("Other")
 end
-SetContinueFunc = function(subItem, info, setValue)
+
+local SetContinueFunc = function(subItem, info, setValue)
     subItem:SetText(tostring(info.continueflag))
 end
-MAXWIDTH = 190 - 7
 
-PosArrayLayoutFunc = function(applicantList, rowIndex, colIndex, subItem)
+local MAXWIDTH = 190 - 7
+
+local PosArrayLayoutFunc = function(applicantList, rowIndex, colIndex, subItem)
 
     subItem.style:SetAlign(ALIGN.LEFT)
     ApplyTextColor(subItem, FONT_COLOR.DEFAULT)
 end
 
-PosArrayFunc = function(subItem, info, setValue)
+local PosArrayFunc = function(subItem, info, setValue)
     if info.posarray == nil then
         subItem:SetText("")
         return
@@ -889,7 +895,6 @@ local EditLayoutFunc = function(applicantList, rowIndex, colIndex, subItem)
     ApplyButtonSkin(minusButton, BUTTON_BASIC.MINUS)
     subItem.minus:Show(false)
 
-
 end
 
 local EditFunc = function(subItem, info, setValue)
@@ -912,8 +917,8 @@ filterlist:Show(true)
 filterlist:SetExtent(w:GetWidth() - 20, w:GetHeight() - 150)
 filterlist:AddAnchor("TOPLEFT", w, "TOPLEFT", 0, 150)
 filterlist:AddAnchor("BOTTOMLEFT", closeButton, "TOPLEFT", 0, -40)
-LISTTYPE = 3
-COLUMNS = 7
+local LISTTYPE = 3
+local COLUMNS = 7
 filterlist:InsertColumn("Name", 75, LISTTYPE, SetNameFunc, nil, nil, nil)
 filterlist:InsertColumn("Max", 35, LISTTYPE, SetMaxFunc, nil, nil, nil)
 filterlist:InsertColumn("Type", 40, LISTTYPE, SetPTFunc, nil, nil, nil)
@@ -963,7 +968,7 @@ end
 
 
 
-function CreateFilterRows(filters)
+local function CreateFilterRows(filters)
     filterlist:DeleteAllDatas()
 
     for i = 1, #filters do
@@ -1009,5 +1014,5 @@ function w:Save()
 end
 
 w.closeButton:SetHandler("OnClick", w.Save)
-api.Log:Info("Settings loaded")
+
 return w
