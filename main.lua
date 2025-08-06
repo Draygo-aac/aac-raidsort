@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1"
+  version = "1.1.1"
 }
 local raidmanager
 
@@ -421,6 +421,7 @@ local teammember = 0
 local sortcounter = 0
 
 local function DoUpdate(dt)
+
     if updaterunning then
         return
     end
@@ -431,7 +432,9 @@ local function DoUpdate(dt)
     counter = counter + 1
     if counter >= 60 then
         counter = 0
-
+        if sortsettings.autoquery then
+            --upvalue?
+        end
         if api.Team:IsPartyTeam() then
             updaterunning = false
             return
@@ -502,6 +505,8 @@ local function Load()
     raidmanager.sortBtn = sortBtn
 
     sortBtn:SetHandler("OnClick", OnSortPress)
+    api.On("UPDATE", OnUpdate)
+
 end
 
 -- Unload is called when addons are reloaded.
@@ -525,6 +530,5 @@ end
 raid_mgr_addon.OnLoad = Load
 raid_mgr_addon.OnUnload = Unload
 raid_mgr_addon.OnSettingToggle = OpenSettings
-api.On("UPDATE", OnUpdate)
 
 return raid_mgr_addon

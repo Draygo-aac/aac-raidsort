@@ -565,8 +565,8 @@ function typeButton:SelectedProc()
 end
 
 filtersettingsframe.loading = false
-function filtersettingsframe:Open(line)
-   
+function filtersettingsframe:Open(line, w)
+    
     local data = w.filters[line]
     filtersettingsframe.loading = true
     filtersettingsframe.parentframe = w
@@ -575,7 +575,7 @@ function filtersettingsframe:Open(line)
     filtersettingsframe.nameEditbox:SetText(data.name)
 
     filtersettingsframe.maxEditbox:SetText(tostring(data.max))
-
+    
     filtersettingsframe:ResetPosArray()
     for i = 1, #data.posarray do
         if data.posarray[i] > 0 and data.posarray[i] <= 50 then
@@ -623,7 +623,7 @@ function filtersettingsframe:Open(line)
 
     end
 
-
+    
     filtersettingsframe:Show(true)
     filtersettingsframe.loading = false
 end
@@ -853,7 +853,7 @@ local EditLayoutFunc = function(applicantList, rowIndex, colIndex, subItem)
         end
         
         --should lock edits while open
-        filtersettingsframe:Open(self.rowIndex)
+        filtersettingsframe:Open(self.rowIndex, w)
          
     end
     subItem.options:SetHandler("OnMouseUp", subItem.options.OnClick)
