@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.2.1"
+  version = "1.1.3"
 }
 local raidmanager
 
@@ -516,12 +516,15 @@ local function OnUpdate(dt)
     end
 end
 
+local updatehelper
+
 -- The Load Function is called as soon as the game loads its UI. Use it to initialize anything you need!
 local function Load() 
     InitiateState()
     SettingsWindow = require("raidsort\\settingswindow")
     CreateTooltip = api._Library.UI.CreateTooltip
-
+    updatehelper = api.Interface:CreateEmptyWindow("Raid Sort Helper", "UIParent")
+    updatehelper:Show(true)
     LoadSortData()
     SaveSortData()
     DebugPrint("CreateTooltip:" .. tostring(CreateTooltip ~= nil))
@@ -546,8 +549,8 @@ local function Load()
     if CreateTooltip == nil or api._Addons.AdvStats.GetData == nil then
         api.Log:Err("Addon prerequisites not properly installed, please install the latest version of the Addon Library and Raid Stats")
     end
-    api.On("UPDATE", OnUpdate)
-
+    --api.On("UPDATE", OnUpdate)
+    updatehelper:SetHandler("OnUpdate", OnUpdate)
 end
 
 -- Unload is called when addons are reloaded.
@@ -561,9 +564,15 @@ local function Unload()
         raidmanager.sortBtn = nil
     end
     if SettingsWindow ~= nil then
+        
         SettingsWindow:OnClose()
         SettingsWindow:Show(false)
         SettingsWindow = nil
+    end
+    if updatehelper ~= nil then
+        --updatehelper:ReleaseHandler("OnUpdate")
+        api.Interface:Free(updatehelper)
+        updatehelper = nil
     end
 end
 
