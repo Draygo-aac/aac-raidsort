@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.1"
+  version = "1.1.2.1"
 }
 local raidmanager
 
@@ -393,6 +393,7 @@ local function SortRaidStep()
     DebugPrint("SortRaidStep")
     if SettingsWindow:IsVisible() then
         InitiateState() --cannot sort while Settings is open
+        DebugPrint("Cannot sort raid while settings window is open.")
         return
     end
     for i = sortstate.step, #savedata do
