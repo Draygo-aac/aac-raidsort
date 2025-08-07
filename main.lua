@@ -116,6 +116,15 @@ end
 local savedata
 local sortsettings
 
+local function GetDefaultSettings()
+    sortsettings = {}
+    sortsettings.autoquery = true
+    sortsettings.autosort = false
+    sortsettings.debug = false
+    sortsettings.version = 1
+end
+GetDefaultSettings()
+
 local function GetDefaults()
     local filters = {}
     filters[1] = CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
@@ -130,11 +139,9 @@ local function GetDefaults()
 end
 
 
-local function GetDefaultSettings()
-    sortsettings = {}
-    sortsettings.autoquery = true
-    sortsettings.autosort = false
-end
+
+
+
 
 local SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
 local _SETTINGSFILE = "raidsort\\data\\settings.lua"
@@ -156,7 +163,19 @@ local function LoadSortData()
     end
     local loadsettings, settingdata = pcall(LoadSettings)
     if loadsettings and settingdata ~= nil then
-        sortsettings = settingdata
+
+        sortsettings.autoquery = settingdata.autoquery
+        sortsettings.autosort = settingdata.autosort
+        if settingdata.debug ~= nil then
+            sortsettings.debug = settingdata.debug
+        end
+        if  settingdata.version ~= nil then
+            sortsettings.version = settingdata.version
+        end
+        if sortsettings.version == nil then
+            sortsettings.version = 1
+            sortsettings.debug = false
+        end
     else
        GetDefaultSettings()
     end
@@ -165,6 +184,13 @@ end
 local function SaveSortData()
 	api.File:Write(SAVEFILEFILTERS, savedata)
     api.File:Write(_SETTINGSFILE, sortsettings)
+end
+
+
+local function DebugPrint(str)
+    if sortsettings.debug then
+        api.Log:Info(str)
+    end
 end
 
 
@@ -302,12 +328,16 @@ local sortstate = {}
 local sortdata = {}
 
 local function InitiateState()
+    DebugPrint("InitiateState")
     sortstate.active = false
     sortstate.step = 1
     sortstate.playerlist = 1
 end
 
+
+
 local function BeginSort()
+    DebugPrint("BeginSort")
     ResetRaidTable()
     sortdata = {}
     for i = 1, #savedata do
@@ -360,6 +390,7 @@ end
 
 
 local function SortRaidStep()
+    DebugPrint("SortRaidStep")
     if SettingsWindow:IsVisible() then
         InitiateState() --cannot sort while Settings is open
         return
@@ -388,6 +419,7 @@ local function SortRaidStep()
         end
         sortstate.playerlist = 1
     end
+    DebugPrint("Finish SortRaidStep")
     sortstate.active = false
 end
 
@@ -431,6 +463,7 @@ local function DoUpdate(dt)
     updaterunning = true
     counter = counter + 1
     if counter >= 60 then
+        DebugPrint("Update Tick: aq: " .. tostring(sortsettings.autoquery) .. " as - " .. tostring(sortsettings.autosort))
         counter = 0
         if sortsettings.autoquery then
             --upvalue?
@@ -447,7 +480,7 @@ local function DoUpdate(dt)
         
         local myunitid = "team" .. mypos
         local isleader = api.Unit:UnitTeamAuthority(myunitid) == "leader"
-
+        DebugPrint("isleader:" .. tostring(isleader))
         if sortsettings.autoquery then
             teammember = teammember + 1
             if teammember >= 51 then
@@ -458,12 +491,14 @@ local function DoUpdate(dt)
             if uid ~= nil then
                 local name = GetName(teammember)
                 local success, data, info = GetOrGetCache(unitid, uid, name)
+                DebugPrint("GetData:" .. tostring(name))
             end
         end
 
         if sortsettings.autosort and isleader then
             sortcounter = sortcounter + 1
             if sortcounter >= 3 then
+                DebugPrint("Calling SortRaid")
                 SortRaid()
                 sortcounter = 0
             end
@@ -485,9 +520,11 @@ local function Load()
     InitiateState()
     SettingsWindow = require("raidsort\\settingswindow")
     CreateTooltip = api._Library.UI.CreateTooltip
+
     LoadSortData()
     SaveSortData()
-    --SandboxBroken()
+    DebugPrint("CreateTooltip:" .. tostring(CreateTooltip ~= nil))
+    DebugPrint("GetData:" .. tostring(api._Addons.AdvStats.GetData ~= nil))
     raidmanager = ADDON:GetContent(UIC.RAID_MANAGER )
 
     if raidmanager.sortBtn ~= nil then
@@ -505,6 +542,9 @@ local function Load()
     raidmanager.sortBtn = sortBtn
 
     sortBtn:SetHandler("OnClick", OnSortPress)
+    if CreateTooltip == nil or api._Addons.AdvStats.GetData == nil then
+        api.Log:Err("Addon prerequisites not properly installed, please install the latest version of the Addon Library and Raid Stats")
+    end
     api.On("UPDATE", OnUpdate)
 
 end

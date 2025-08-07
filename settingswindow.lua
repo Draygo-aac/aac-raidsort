@@ -681,6 +681,24 @@ w.AutoSort:AddAnchor("RIGHT", AutoSortLabel, 24, 0)
 w.AutoSort:SetButtonStyle("default")
 w.AutoSort:Show(true)
 
+
+text = "Debug:"
+local DebugLabel = w:CreateChildWidget("label", "AutoSortLabel", 0, true)
+DebugLabel:AddAnchor("BOTTOMLEFT", AutoPollLabel, 400 , (FONT_SIZE.LARGE + ROWPADDING))
+DebugLabel:SetText(text)
+DebugLabel:SetHeight(FONT_SIZE.LARGE)
+DebugLabel:SetWidth(width)
+DebugLabel.style:SetFontSize(FONT_SIZE.LARGE)
+DebugLabel.style:SetAlign(3)
+ApplyTextColor(DebugLabel, FONT_COLOR.DEFAULT)
+
+
+--Enable Auto Sorting
+w.Debug = CreateCheckButton("autopollcheck", w, nil)
+w.Debug:AddAnchor("RIGHT", DebugLabel, 24, 0)
+w.Debug:SetButtonStyle("default")
+w.Debug:Show(true)
+
 --Create Filter Header
 text = "Filters:"
 local FilterLabel = w:CreateChildWidget("label", "FilterLabel", 0, true)
@@ -992,6 +1010,7 @@ function w:Open(filters, settings, onclose)
 	w.settings = settings
     w.AutoPoll:SetChecked(settings.autoquery)
     w.AutoSort:SetChecked(settings.autosort)
+    w.Debug:SetChecked(settings.debug)
 	w.OnCloseCallback = onclose
 	w:Show(true)
     filtersettingsframe:Show(false)
@@ -1005,6 +1024,7 @@ end
 function w:Save()
     w.settings.autoquery = w.AutoPoll:GetChecked()
     w.settings.autosort = w.AutoSort:GetChecked()
+    w.settings.debug = w.Debug:GetChecked()
 	local attempt, err = pcall(w.OnCloseCallback, w.filters, w.settings)
     if attempt == false then
         api.Log:Err(err)
