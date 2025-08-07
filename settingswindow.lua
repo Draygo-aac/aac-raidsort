@@ -684,20 +684,37 @@ w.AutoSort:Show(true)
 
 text = "Debug:"
 local DebugLabel = w:CreateChildWidget("label", "AutoSortLabel", 0, true)
-DebugLabel:AddAnchor("BOTTOMLEFT", AutoPollLabel, 400 , (FONT_SIZE.LARGE + ROWPADDING))
+DebugLabel:AddAnchor("BOTTOMLEFT", AutoPollLabel, 400 , 0)
 DebugLabel:SetText(text)
 DebugLabel:SetHeight(FONT_SIZE.LARGE)
-DebugLabel:SetWidth(width)
+DebugLabel:SetWidth(width + 50)
 DebugLabel.style:SetFontSize(FONT_SIZE.LARGE)
 DebugLabel.style:SetAlign(3)
 ApplyTextColor(DebugLabel, FONT_COLOR.DEFAULT)
 
 
 --Enable Auto Sorting
-w.Debug = CreateCheckButton("autopollcheck", w, nil)
+w.Debug = CreateCheckButton("debugcheck", w, nil)
 w.Debug:AddAnchor("RIGHT", DebugLabel, 24, 0)
 w.Debug:SetButtonStyle("default")
 w.Debug:Show(true)
+
+text = "Extreme Debug:"
+local HighDebugLabel = w:CreateChildWidget("label", "AutoSortLabel", 0, true)
+HighDebugLabel:AddAnchor("BOTTOMLEFT", DebugLabel, 0 , (FONT_SIZE.LARGE + ROWPADDING))
+HighDebugLabel:SetText(text)
+HighDebugLabel:SetHeight(FONT_SIZE.LARGE)
+HighDebugLabel:SetWidth(width + 50)
+HighDebugLabel.style:SetFontSize(FONT_SIZE.LARGE)
+HighDebugLabel.style:SetAlign(3)
+ApplyTextColor(HighDebugLabel, FONT_COLOR.DEFAULT)
+
+
+--Enable Auto Sorting
+w.HighDebug = CreateCheckButton("highdebugcheck", w, nil)
+w.HighDebug:AddAnchor("RIGHT", HighDebugLabel, 24, 0)
+w.HighDebug:SetButtonStyle("default")
+w.HighDebug:Show(true)
 
 --Create Filter Header
 text = "Filters:"
@@ -1011,6 +1028,7 @@ function w:Open(filters, settings, onclose)
     w.AutoPoll:SetChecked(settings.autoquery)
     w.AutoSort:SetChecked(settings.autosort)
     w.Debug:SetChecked(settings.debug)
+    w.HighDebug:SetChecked(settings.highdebug)
 	w.OnCloseCallback = onclose
 	w:Show(true)
     filtersettingsframe:Show(false)
@@ -1025,6 +1043,7 @@ function w:Save()
     w.settings.autoquery = w.AutoPoll:GetChecked()
     w.settings.autosort = w.AutoSort:GetChecked()
     w.settings.debug = w.Debug:GetChecked()
+    w.settings.highdebug = w.HighDebug:GetChecked()
 	local attempt, err = pcall(w.OnCloseCallback, w.filters, w.settings)
     if attempt == false then
         api.Log:Err(err)

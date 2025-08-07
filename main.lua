@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.3"
+  version = "1.1.4"
 }
 local raidmanager
 
@@ -122,6 +122,7 @@ local function GetDefaultSettings()
     sortsettings.autosort = false
     sortsettings.debug = false
     sortsettings.version = 1
+    sortsettings.highdebug = false
 end
 GetDefaultSettings()
 
@@ -172,6 +173,9 @@ local function LoadSortData()
         if  settingdata.version ~= nil then
             sortsettings.version = settingdata.version
         end
+        if settingdata.highdebug ~= nil then
+            sortsettings.highdebug = false
+        end
         if sortsettings.version == nil then
             sortsettings.version = 1
             sortsettings.debug = false
@@ -189,6 +193,12 @@ end
 
 local function DebugPrint(str)
     if sortsettings.debug then
+        api.Log:Info(str)
+    end
+end
+
+local function DebugHighPrint(str)
+    if sortsettings.highdebug then
         api.Log:Info(str)
     end
 end
@@ -452,9 +462,13 @@ end
 local counter = 0
 local teammember = 0
 local sortcounter = 0
+local updaterunning = false
 
 local function DoUpdate(dt)
-
+    if sortstate == nil then
+        DebugPrint("DoUpdate sortstate is nil")
+    end
+    DebugHighPrint("DoUpdate: updaterunning - " .. tostring(updaterunning) .. " active - " .. tostring(sortstate.active))
     if updaterunning then
         return
     end
