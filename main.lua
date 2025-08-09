@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.4"
+  version = "1.1.4.1"
 }
 local raidmanager
 
@@ -388,13 +388,7 @@ local function BeginSort()
     sortstate.playerlist = 1
 end
 
-local function OnSortPress()
-    if SettingsWindow:IsVisible() then
-        api.Log:Info("Cannot sort raid while settings window is open.")
-        return
-    end
-    SortRaid()
-end
+
 
 
 
@@ -528,6 +522,14 @@ local function OnUpdate(dt)
     if success == false then
         api.Log:Err(err)
     end
+end
+
+local function OnSortPress()
+    if SettingsWindow:IsVisible() then
+        api.Log:Info("Cannot sort raid while settings window is open.")
+        return
+    end
+    SortRaid()
 end
 
 local updatehelper
