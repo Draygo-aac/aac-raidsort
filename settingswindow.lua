@@ -226,7 +226,8 @@ function filtersettingsframe:OnClose(save)
         end
         
         filtersettingsframe.rawdata.max = newmax
-        filtersettingsframe.continueflag = newmax ~= 50
+        --api.Log:Info(tostring(newmax ~= 50))
+        filtersettingsframe.rawdata.continueflag = newmax ~= 50
         filtersettingsframe.rawdata.posarray = {}
         for i = 1, #filtersettingsframe.newposarray do
             table.insert(filtersettingsframe.rawdata.posarray, filtersettingsframe.newposarray[i])
