@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.4.2"
+  version = "1.1.4.3"
 }
 local raidmanager
 
@@ -139,11 +139,6 @@ local function GetDefaults()
     return filters
 end
 
-
-
-
-
-
 local SAVEFILEFILTERS = "raidsort\\data\\filters.lua"
 local _SETTINGSFILE = "raidsort\\data\\settings.lua"
 
@@ -190,7 +185,6 @@ local function SaveSortData()
     api.File:Write(_SETTINGSFILE, sortsettings)
 end
 
-
 local function DebugPrint(str)
     if sortsettings.debug then
         api.Log:Info(str)
@@ -202,7 +196,6 @@ local function DebugHighPrint(str)
         api.Log:Info(str)
     end
 end
-
 
 local function IsNameMatch(filterobject, name)
     for i = 1, #filterobject.playertable do
@@ -344,8 +337,6 @@ local function InitiateState()
     sortstate.playerlist = 1
 end
 
-
-
 local function BeginSort()
     DebugPrint("BeginSort")
     ResetRaidTable()
@@ -388,11 +379,6 @@ local function BeginSort()
     sortstate.playerlist = 1
 end
 
-
-
-
-
-
 local function SortRaidStep()
     DebugPrint("SortRaidStep")
     if SettingsWindow:IsVisible() then
@@ -415,7 +401,7 @@ local function SortRaidStep()
                 end
             end
             local idx = GetMemberIndexByName(unit.id)
-            if pos ~= 0  and idx ~= pos then
+            if pos ~= 0  and idx ~= pos  and idx ~= nil then
                 Swap(idx, pos)
                 sortstate.playerlist = ii + 1
                 sortstate.step = i
