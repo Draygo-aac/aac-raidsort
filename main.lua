@@ -1,4 +1,4 @@
-local api = require("api")
+--local api = require("api")
 local CreateTooltip = nil
 
 local SettingsWindow
@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.4.3"
+  version = "1.1.5"
 }
 local raidmanager
 
@@ -239,23 +239,22 @@ local function ResetRaidTable()
     end
 end
 
-local function FilterGetNext(filterobject, index)
-    --api.Log:Info("FilterGetNext " .. posstartarray[index] .. " " .. #filterobject.posarray)
-    if maxarray[index] >= filterobject.max then
+local function FilterGetNext(filterobject, filterindex)
+    if maxarray[filterindex] >= filterobject.max then
         return 0
     end
-
-    for i = posstartarray[index], #filterobject.posarray do
+    local i = 0
+    for i = posstartarray[filterindex], #filterobject.posarray do
         local idx = filterobject.posarray[i]
-        --api.Log:Info(idx)
         if raidtable[idx] == false then
-            maxarray[index] = maxarray[index] + 1
+            maxarray[filterindex] = maxarray[filterindex] + 1
             raidtable[idx] = true
             return idx
         end
     end
     for i = 1, 50 do
         if raidtable[i] == false then
+            maxarray[filterindex] = maxarray[filterindex] + 1
             raidtable[i] = true
             return i
         end
@@ -268,7 +267,45 @@ local function GetUnitInfo(uid)
 end
 
 local cachedData = {}
+local cacheTable = {}
+local cachePos = {}
 local cachedInfo = {}
+
+local function GetMax(name)
+    local maxdata = {}	
+    for i = 1, 14 do
+        maxdata[i] = 0
+    end
+
+    for i = 1, #cacheTable[name] do
+        api.Log:Info(tostring(maxdata[4]) .. " " .. tostring(cacheTable[name][i][4]) .. " " .. tostring(maxdata[4] < cacheTable[name][i][4]) )
+        for ii = 1, 14 do
+            if maxdata[ii] < cacheTable[name][i][ii] then
+                maxdata[ii] = cacheTable[name][i][ii]
+            end
+        end
+    end
+    return maxdata
+end
+
+
+-- circular cache
+local function AddToCache(name, data)
+    if cachePos[name] == nil then
+        cachePos[name] = 1
+        cachedData[name] = data
+        cacheTable[name] = {}
+        cacheTable[name][cachePos[name]] = data
+        return
+    end
+    local pos = cachePos[name] + 1
+    if pos > 10 then
+        pos = 1
+    end
+    cachePos[name] = pos
+    cacheTable[name][pos] = data
+    cachedData[name] = GetMax(name)
+end
 
 local function GetOrGetCache(unitid, uid, name)
     
@@ -279,12 +316,14 @@ local function GetOrGetCache(unitid, uid, name)
     local gotdata, data = pcall(api._Addons.AdvStats.GetData, unitid)
 
     if gotdata == false then
+        
         if cachedData[name] ~= nil then
             data = cachedData[name]
             gotdata = true
         end        
     else
-        cachedData[name] = data
+        AddToCache(name, data)
+        data = cachedData[name]
     end
 
     local gotunitinfo, info = pcall(GetUnitInfo, uid)
@@ -340,6 +379,7 @@ end
 local function BeginSort()
     DebugPrint("BeginSort")
     ResetRaidTable()
+    local i, ii
     sortdata = {}
     for i = 1, #savedata do
         sortdata[i] = {}
@@ -348,6 +388,7 @@ local function BeginSort()
         local unitid, uid = GetUnit(i)
         local name = GetName(i)
         local success, data, info = GetOrGetCache(unitid, uid, name)
+        
         if uid ~= nil and success then
             for ii = 1, #savedata do
                 local add = false
@@ -386,6 +427,7 @@ local function SortRaidStep()
         DebugPrint("Cannot sort raid while settings window is open.")
         return
     end
+    local i, ii, iii
     for i = sortstate.step, #savedata do
         local playerlist = sortdata[i]
         local filterobject = savedata[i]
@@ -458,7 +500,7 @@ local function DoUpdate(dt)
     updaterunning = true
     counter = counter + 1
     if counter >= 60 then
-        DebugPrint("Update Tick: aq: " .. tostring(sortsettings.autoquery) .. " as - " .. tostring(sortsettings.autosort))
+        DebugPrint("Update Tick: aq: " .. tostring(sortsettings.autoquery) .. " as: " .. tostring(sortsettings.autosort))
         counter = 0
         if sortsettings.autoquery then
             --upvalue?
@@ -486,7 +528,7 @@ local function DoUpdate(dt)
             if uid ~= nil then
                 local name = GetName(teammember)
                 local success, data, info = GetOrGetCache(unitid, uid, name)
-                DebugPrint("GetData:" .. tostring(name))
+                DebugPrint("GetData:" .. tostring(name) .. " " .. tostring(data[4]))
             end
         end
 
@@ -531,6 +573,7 @@ local function Load()
     SaveSortData()
     DebugPrint("CreateTooltip:" .. tostring(CreateTooltip ~= nil))
     DebugPrint("GetData:" .. tostring(api._Addons.AdvStats.GetData ~= nil))
+
     raidmanager = ADDON:GetContent(UIC.RAID_MANAGER )
 
     if raidmanager.sortBtn ~= nil then

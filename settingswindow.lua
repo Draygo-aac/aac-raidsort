@@ -79,6 +79,70 @@ STAT_ARRAYNAME[SORT_DEFENSE] = "Tank"
 local DEFAULT_ODE_MAX = 4
 local DEFAULT_MAX = 50
 
+local size = 12
+--local icon = jobIconFrame:CreateImageDrawable(TEXTURE_PATH.HUD, "overlay")
+local AbilityCoords = {
+{
+480,
+498,
+size,
+size
+},
+{
+534,
+483,
+size,
+size
+},
+{
+492,
+498,
+size,
+size
+},
+{
+510,
+483,
+size,
+size
+},
+{
+522,
+471,
+size,
+size
+},
+{
+528,
+454,
+size,
+size
+},
+{
+504,
+498,
+size,
+size
+},
+{
+522,
+483,
+size,
+size
+},
+{
+534,
+471,
+size,
+size
+},
+{
+510,
+471,
+size,
+size
+}
+}
 
 
 local function SetButtonFontColor(button, color)
@@ -213,6 +277,7 @@ filtersettingsframe:Show(false)
 filtersettingsframe.parentframe = nil
 filtersettingsframe.dataline = 0
 filtersettingsframe.rawdata = nil
+
 local function all_trim(s)
    return s:match( "^%s*(.-)%s*$" )
 end
