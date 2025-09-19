@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.5"
+  version = "1.1.5.1"
 }
 local raidmanager
 
@@ -278,7 +278,7 @@ local function GetMax(name)
     end
 
     for i = 1, #cacheTable[name] do
-        api.Log:Info(tostring(maxdata[4]) .. " " .. tostring(cacheTable[name][i][4]) .. " " .. tostring(maxdata[4] < cacheTable[name][i][4]) )
+        --api.Log:Info(tostring(maxdata[4]) .. " " .. tostring(cacheTable[name][i][4]) .. " " .. tostring(maxdata[4] < cacheTable[name][i][4]) )
         for ii = 1, 14 do
             if maxdata[ii] < cacheTable[name][i][ii] then
                 maxdata[ii] = cacheTable[name][i][ii]
