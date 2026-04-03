@@ -45,7 +45,7 @@ local raid_mgr_addon = {
   name = "Raid Sort",
   author = "Delarme",
   desc = "Sorts the raid",
-  version = "1.1.5.1"
+  version = "1.1.5.2"
 }
 local raidmanager
 
@@ -65,20 +65,24 @@ end
 
 local function Swap(fromindex, toindex)
 
-    fromname = GetName(fromindex)
-    toname = GetName(toindex)
-    local fromteam = "team" .. fromindex
-    local toteam = "team" .. toindex
-    fromindex = fromindex - 1
-    local fromparty = math.floor(fromindex / 5) + 1
-    local frommember = math.fmod(fromindex, 5) + 1
-    toindex = toindex - 1
-    local toparty = math.floor(toindex / 5) + 1
-    local tomember = math.fmod(toindex, 5) + 1
+    api.Team:MoveTeamMember(fromindex,toindex)
 
-    raidmanager.party[fromparty].member[frommember].eventWindow:OnDragStart()
-    raidmanager.party[toparty].member[tomember].eventWindow:OnDragReceive()
-    raidmanager.party[fromparty].member[frommember].eventWindow:OnDragStop()
+    --fromname = GetName(fromindex)
+    --toname = GetName(toindex)
+
+
+    --local fromteam = "team" .. fromindex
+    --local toteam = "team" .. toindex
+    --fromindex = fromindex - 1
+    --local fromparty = math.floor(fromindex / 5) + 1
+    --local frommember = math.fmod(fromindex, 5) + 1
+    --toindex = toindex - 1
+    --local toparty = math.floor(toindex / 5) + 1
+    --local tomember = math.fmod(toindex, 5) + 1
+
+    --raidmanager.party[fromparty].member[frommember].eventWindow:OnDragStart()
+    --raidmanager.party[toparty].member[tomember].eventWindow:OnDragReceive()
+    --raidmanager.party[fromparty].member[frommember].eventWindow:OnDragStop()
 end
 
 local function sortvalue(a, b)
