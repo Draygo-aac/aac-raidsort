@@ -53,12 +53,14 @@ local STAT_HEALING = 11
 local STAT_MELEEHP = 12
 local STAT_RANGEDHP = 13
 local STAT_MAGICHP = 14
+local STAT_ODE = 16
 
 local SORT_MELEE = 1
 local SORT_RANGED = 2
 local SORT_MAGIC = 3
 local SORT_HEALING = 4
 local SORT_DEFENSE = 5
+local SORT_ODE = 6
 local SORT_OTHER = 0
 
 local STAT_ARRAY = {}
@@ -67,6 +69,7 @@ STAT_ARRAY[SORT_RANGED] = {STAT_RANGED}
 STAT_ARRAY[SORT_MAGIC] = {STAT_MAGIC}
 STAT_ARRAY[SORT_HEALING] = {STAT_HEALING}
 STAT_ARRAY[SORT_DEFENSE] = {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}
+STAT_ARRAY[SORT_ODE] = {STAT_ODE}
 
 local STAT_ARRAYNAME = {}
 STAT_ARRAYNAME[SORT_OTHER] = "Other"
@@ -75,6 +78,7 @@ STAT_ARRAYNAME[SORT_RANGED] = "Ranged Damage"
 STAT_ARRAYNAME[SORT_MAGIC] = "Magic Damage"
 STAT_ARRAYNAME[SORT_HEALING] = "Healing Power"
 STAT_ARRAYNAME[SORT_DEFENSE] = "Tank"
+STAT_ARRAYNAME[SORT_ODE] = "Ode"
 
 local DEFAULT_ODE_MAX = 4
 local DEFAULT_MAX = 50
@@ -257,6 +261,9 @@ local function getSortOption(array)
         if array[1] == STAT_HEALING then
             return SORT_HEALING
         end
+        if array[1] == STAT_ODE then
+            return SORT_ODE
+        end
     end
     if #array == 4 then
         if array[1] == STAT_MELEEHP and array[2] == STAT_RANGEDHP and array[3] == STAT_MAGICHP and array[4] == STAT_MAGICHP then
@@ -325,9 +332,11 @@ function filtersettingsframe:OnClose(save)
             end
             local statgroup = filtersettingsframe.statButton:GetSelectedIndex()
             if statgroup > 0 and statgroup <= #STAT_ARRAY then
+              
                 filtersettingsframe.rawdata.stat = {}
                 local statarray = STAT_ARRAY[statgroup]
                 for i = 1, #statarray do
+
                     table.insert(filtersettingsframe.rawdata.stat, statarray[i])
                 end
             end
@@ -689,14 +698,11 @@ function filtersettingsframe:Open(line, w)
 
     end
 
-    
     filtersettingsframe:Show(true)
     filtersettingsframe.loading = false
 end
 
-
 --
-
 local w = api.Interface:CreateWindow("RaidSortSettingsWnd", "Raid Sort Settings", 600, 700)
 
 w:SetTitle("Raid Sort Settings")
@@ -747,6 +753,20 @@ w.AutoSort:AddAnchor("RIGHT", AutoSortLabel, 24, 0)
 w.AutoSort:SetButtonStyle("default")
 w.AutoSort:Show(true)
 
+text = "Save Cache:"
+local SaveCacheLabel = w:CreateChildWidget("label", "SaveCacheLabel", 0, true)
+SaveCacheLabel:AddAnchor("BOTTOMLEFT", AutoPollLabel, 150 , 0)
+SaveCacheLabel:SetText(text)
+SaveCacheLabel:SetHeight(FONT_SIZE.LARGE)
+SaveCacheLabel:SetWidth(100)
+SaveCacheLabel.style:SetFontSize(FONT_SIZE.LARGE)
+SaveCacheLabel.style:SetAlign(3)
+ApplyTextColor(SaveCacheLabel, FONT_COLOR.DEFAULT)
+
+w.Cache = CreateCheckButton("cachecheck", w, nil)
+w.Cache:AddAnchor("RIGHT", SaveCacheLabel, 24, 0)
+w.Cache:SetButtonStyle("default")
+w.Cache:Show(true)
 
 text = "Debug:"
 local DebugLabel = w:CreateChildWidget("label", "AutoSortLabel", 0, true)
@@ -757,7 +777,6 @@ DebugLabel:SetWidth(width + 50)
 DebugLabel.style:SetFontSize(FONT_SIZE.LARGE)
 DebugLabel.style:SetAlign(3)
 ApplyTextColor(DebugLabel, FONT_COLOR.DEFAULT)
-
 
 --Enable Auto Sorting
 w.Debug = CreateCheckButton("debugcheck", w, nil)
@@ -806,8 +825,6 @@ defaultsButton:AddAnchor("BOTTOMRIGHT", w, -40, -10)
 ApplyButtonSkin(defaultsButton, BUTTON_BASIC.DEFAULT)
 
 w.defaultsButton = defaultsButton
-
-
 
 w:Show(false)
 w.OnCloseCallback = nil
@@ -863,7 +880,6 @@ local SetPTFunc = function(subItem, info, setValue)
     else
         subItem:SetText("Class")
     end
-    
 end
 
 local SetClassFilterFunc = function(subItem, info, setValue)
@@ -879,66 +895,67 @@ local SetClassFilterFunc = function(subItem, info, setValue)
 end
 
 local SetStatFunc = function(subItem, info, setValue)
-
-    if (info.stat == nil or #info.stat == 0) then
-        subItem:SetText("n/a")
-        return
+  if (info.stat == nil or #info.stat == 0) then
+    subItem:SetText("n/a")
+    return
+  end
+  if info.stat[1] == STAT_MELEE then
+    subItem:SetText("Melee DPS")
+    return
+  end
+  if info.stat[1] == STAT_MAGIC then
+    subItem:SetText("Magic DPS")
+    return
+  end
+  if info.stat[1] == STAT_RANGED then
+    subItem:SetText("Ranged DPS")
+    return
+  end
+  if info.stat[1] == STAT_HEALING then
+    subItem:SetText("Healing")
+    return
+  end
+  if info.stat[1] == STAT_ODE then
+    subItem:SetText("Ode")
+    return
+  end
+  if #info.stat == 4 then
+    if info.stat[1] == STAT_MELEEHP and info.stat[2] == STAT_RANGEDHP and info.stat[3] == STAT_MAGICHP and info.stat[4] == STAT_MAGICHP then
+      subItem:SetText("Tank")
+      return
     end
-    if info.stat[1] == STAT_MELEE then
-        subItem:SetText("Melee DPS")
-        return
-    end
-    if info.stat[1] == STAT_MAGIC then
-        subItem:SetText("Magic DPS")
-        return
-    end
-    if info.stat[1] == STAT_RANGED then
-        subItem:SetText("Ranged DPS")
-        return
-    end
-    if info.stat[1] == STAT_HEALING then
-        subItem:SetText("Healing")
-        return
-    end
-    if #info.stat == 4 then
-        if info.stat[1] == STAT_MELEEHP and info.stat[2] == STAT_RANGEDHP and info.stat[3] == STAT_MAGICHP and info.stat[4] == STAT_MAGICHP then
-            subItem:SetText("Tank")
-            return
-        end
-    end
-    subItem:SetText("Other")
+  end
+  subItem:SetText("Other")
 end
 
 local SetContinueFunc = function(subItem, info, setValue)
-    subItem:SetText(tostring(info.continueflag))
+  subItem:SetText(tostring(info.continueflag))
 end
 
 local MAXWIDTH = 190 - 7
 
 local PosArrayLayoutFunc = function(applicantList, rowIndex, colIndex, subItem)
-
-    subItem.style:SetAlign(ALIGN.LEFT)
-    ApplyTextColor(subItem, FONT_COLOR.DEFAULT)
+  subItem.style:SetAlign(ALIGN.LEFT)
+  ApplyTextColor(subItem, FONT_COLOR.DEFAULT)
 end
 
 local PosArrayFunc = function(subItem, info, setValue)
-    if info.posarray == nil then
-        subItem:SetText("")
-        return
+  if info.posarray == nil then
+    subItem:SetText("")
+    return
+  end
+  local text = ""
+  local width = 0
+  for i = 1, #info.posarray do
+    local addition = tostring(info.posarray[i]) .. " "
+    width = width + subItem.style:GetTextWidth(addition)
+    if width > MAXWIDTH then
+      text = text .. ".."
+      break
     end
-    local text = ""
-    local width = 0
-    for i = 1, #info.posarray do
-        local addition = tostring(info.posarray[i]) .. " "
-        width = width + subItem.style:GetTextWidth(addition)
-        if width > MAXWIDTH then
-            text = text .. ".."
-            break
-        end
-        text = text .. addition
-    end
-    subItem:SetText(text)
-
+    text = text .. addition
+  end
+  subItem:SetText(text)
 end
 
 
@@ -1057,7 +1074,7 @@ function w:GetDefaults()
 
     local filters = {}
     filters[1] = w:CreateFilter("Players", DEFAULT_MAX, {}, {}, {}, false, {""})
-    filters[2] = w:CreateFilter("Ode", DEFAULT_ODE_MAX, {CLASS_HEALER, CLASS_SONGCRAFT}, {STAT_HEALING}, {21,22,23,24}, true)
+    filters[2] = w:CreateFilter("Ode", DEFAULT_ODE_MAX, {CLASS_HEALER, CLASS_SONGCRAFT}, {STAT_ODE}, {21,22,23,24}, true)
     filters[3] = w:CreateFilter("Tank", DEFAULT_MAX, {CLASS_OCCULTISM}, {STAT_MELEEHP, STAT_RANGEDHP, STAT_MAGICHP, STAT_MAGICHP}, {1,2,3,4,6,11,16,7,8,9}, false)
     filters[4] = w:CreateFilter("Mage", DEFAULT_MAX, {CLASS_MAGE}, {STAT_MAGIC}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
     filters[5] = w:CreateFilter("Melee", DEFAULT_MAX, {CLASS_BATTLERAGE}, {STAT_MELEE}, {1,2,3,4,6,7,8,9,11,12,13,14,16,17,18,19,21,22,23,24,26,27,28,29,31,32,33,34,36,37,38,39,41,42,43,44,46,47,48,49}, false)
@@ -1066,8 +1083,6 @@ function w:GetDefaults()
 
     return filters
 end
-
-
 
 local function CreateFilterRows(filters)
     filterlist:DeleteAllDatas()
@@ -1086,8 +1101,6 @@ function w:Refresh()
 end
 
 function w:Open(filters, settings, onclose)
-
-
 	w.filters = filters
     w.Refresh()
 	w.settings = settings
@@ -1095,6 +1108,7 @@ function w:Open(filters, settings, onclose)
     w.AutoSort:SetChecked(settings.autosort)
     w.Debug:SetChecked(settings.debug)
     w.HighDebug:SetChecked(settings.highdebug)
+    w.Cache:SetChecked(settings.savecache)
 	w.OnCloseCallback = onclose
 	w:Show(true)
     filtersettingsframe:Show(false)
@@ -1110,6 +1124,7 @@ function w:Save()
     w.settings.autosort = w.AutoSort:GetChecked()
     w.settings.debug = w.Debug:GetChecked()
     w.settings.highdebug = w.HighDebug:GetChecked()
+    w.settings.savecache = w.Cache:GetChecked()
 	local attempt, err = pcall(w.OnCloseCallback, w.filters, w.settings)
     if attempt == false then
         api.Log:Err(err)
